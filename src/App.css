@@ -182,6 +182,17 @@
   opacity: 0.72;
 }
 
+/* Вращение иконки во время обновления данных. */
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .header-actions {
   display: flex;
   align-items: center;
@@ -1381,10 +1392,26 @@ code {
     padding: 10px;
   }
 
+  .brand-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
   .brand-left {
     display: grid;
     justify-items: center;
     text-align: center;
+  }
+
+  /* Ровные одинаковые кнопки «Обновить»/«Выйти» на всю ширину. */
+  .header-actions {
+    width: 100%;
+  }
+
+  .header-actions > button {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0 12px;
   }
 
   .bahandi-logo {
@@ -1488,6 +1515,7 @@ code {
   }
 }
 
+<<<<<<< HEAD
 /* =========================================================================
    NEW SMART FORM STYLES
    ========================================================================= */
@@ -1880,3 +1908,310 @@ code {
   background: var(--surface-soft);
 }
 
+=======
+/* ============================================================= */
+/* Фичи проверяющего: мини-дашборд, AI-скоринг, массовый апрув    */
+/* ============================================================= */
+
+/* --- Мини-дашборд «Лимит списаний на сегодня» --- */
+.limit-meter {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.limit-meter-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.limit-meter-head span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.limit-meter-head strong {
+  flex: 0 0 auto;
+  color: var(--black);
+  font-size: 0.82rem;
+}
+
+.limit-meter-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  overflow: hidden;
+}
+
+.limit-meter-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--green);
+  transition: width 0.25s ease;
+}
+
+.limit-meter.over .limit-meter-head strong {
+  color: var(--red);
+}
+
+.limit-meter.over .limit-meter-fill {
+  background: var(--red);
+}
+
+/* --- AI-скоринг: цветная рамка фото + точка-индикатор --- */
+/* Карточка получает relative, чтобы точка позиционировалась поверх фото. */
+.request-card {
+  position: relative;
+  user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+}
+
+.request-card img.score-safe {
+  box-shadow: 0 0 0 3px var(--green);
+}
+
+.request-card img.score-watch {
+  box-shadow: 0 0 0 3px var(--orange);
+}
+
+.request-card img.score-risk {
+  box-shadow: 0 0 0 3px var(--red);
+}
+
+.score-dot {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--surface);
+  border-radius: 999px;
+}
+
+.score-dot.score-safe {
+  background: var(--green);
+}
+
+.score-dot.score-watch {
+  background: var(--orange);
+}
+
+.score-dot.score-risk {
+  background: var(--red);
+}
+
+/* --- Режим выбора --- */
+.request-card.selected {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px var(--green-soft);
+}
+
+.request-card .select-icon {
+  align-self: center;
+  color: var(--muted);
+}
+
+.request-card .select-icon.on {
+  color: var(--green);
+}
+
+/* Лёгкая тактильная отдача при нажатии (мобилка, без :hover). */
+.request-card:active {
+  transform: scale(0.99);
+}
+
+/* --- Плавающая нижняя панель массового апрува --- */
+.bulk-bar {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 60;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: 0 -10px 30px rgba(32, 28, 24, 0.14);
+}
+
+.bulk-bar-inner {
+  display: flex;
+  gap: 10px;
+  width: min(1180px, 100%);
+  margin: 0 auto;
+}
+
+.bulk-clear-btn {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  min-height: 52px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  color: var(--black);
+  background: #ffffff;
+}
+
+.bulk-approve-btn {
+  flex: 1 1 auto;
+  min-height: 52px;
+  font-size: 1rem;
+}
+
+.bulk-clear-btn:active,
+.bulk-approve-btn:active {
+  transform: scale(0.99);
+}
+
+/* Резерв снизу, чтобы панель не перекрывала последнюю карточку. */
+.web-dashboard.has-bulk-bar {
+  padding-bottom: 84px;
+}
+
+/* ============================================================= */
+/* Свайпы карточек, Bottom Sheet, Undo-snackbar (Framer Motion)   */
+/* ============================================================= */
+
+/* Контейнер свайпа: фон-подложки + перетаскиваемая карточка. */
+.swipe-shell {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.swipe-bg {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 20px;
+  border-radius: 8px;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+
+.swipe-bg.approve {
+  justify-content: flex-start;
+  background: var(--green);
+}
+
+.swipe-bg.reject {
+  justify-content: flex-end;
+  background: var(--red);
+}
+
+.swipe-fg {
+  position: relative;
+  z-index: 1;
+  touch-action: pan-y;
+  cursor: grab;
+}
+
+.swipe-fg:active {
+  cursor: grabbing;
+}
+
+/* --- Undo-snackbar --- */
+.undo-snackbar {
+  position: fixed;
+  right: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  left: 16px;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: min(520px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 12px 14px;
+  border-radius: 10px;
+  color: #ffffff;
+  background: var(--black);
+  box-shadow: 0 12px 30px rgba(32, 28, 24, 0.28);
+  font-weight: 600;
+}
+
+.undo-btn {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  color: var(--black);
+  background: #ffffff;
+  font-weight: 800;
+}
+
+/* --- Bottom Sheet --- */
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(24, 20, 16, 0.45);
+}
+
+.bottom-sheet {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 81;
+  display: grid;
+  gap: 14px;
+  width: 100%;
+  padding: 12px 18px calc(22px + env(safe-area-inset-bottom));
+  border-radius: 18px 18px 0 0;
+  background: var(--surface);
+  box-shadow: 0 -16px 40px rgba(32, 28, 24, 0.2);
+}
+
+.sheet-handle {
+  justify-self: center;
+  width: 44px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--line-strong);
+}
+
+.bottom-sheet h3 {
+  margin: 0;
+  color: var(--black);
+  font-size: 1.05rem;
+}
+
+.reason-chips {
+  display: grid;
+  gap: 10px;
+}
+
+.reason-chip {
+  display: flex;
+  align-items: center;
+  min-height: 54px;
+  padding: 0 18px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  color: var(--black);
+  background: var(--surface-soft);
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: left;
+}
+
+.reason-chip:active {
+  transform: scale(0.99);
+  border-color: var(--orange);
+}
+>>>>>>> origin/main

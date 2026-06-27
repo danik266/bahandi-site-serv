@@ -1,5 +1,6 @@
 export { WriteOffForm } from './WriteOffForm'
 export { RequestCard } from './RequestCard'
+export { SwipeableRequestCard } from './SwipeableRequestCard'
 export { RequestDetail } from './RequestDetail'
 export { HistoryRow } from './HistoryRow'
 export { HistoryView } from './HistoryView'

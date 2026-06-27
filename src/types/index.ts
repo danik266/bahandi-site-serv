@@ -58,6 +58,9 @@ export type WriteOffRequest = {
   iikoStatusMessage?: string
   createdAt: string
   reviewedAt?: string
+  // AI-скоринг риска заявки (0-100 либо 0-1). Приходит из mock-данных бэкенда.
+  fraud_score?: number
+  fraudScore?: number
 }
 
 export type AuditEvent = {

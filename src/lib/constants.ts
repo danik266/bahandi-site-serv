@@ -20,6 +20,9 @@ export const statusIcon: Record<Status, typeof Clock3> = {
   iiko_error: AlertTriangle,
 }
 
+// Дневной лимит суммы списаний (тг) для мини-дашборда проверяющего.
+export const DAILY_WRITEOFF_LIMIT = 10000
+
 export const emptyData: BootstrapPayload = {
   outlets: [],
   products: [],

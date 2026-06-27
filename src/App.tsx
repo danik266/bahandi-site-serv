@@ -32,7 +32,15 @@ import './App.css'
 
 function App() {
   const navigate = useNavigate()
-  const [currentUser, setCurrentUser] = useState<Employee | null>(null)
+  // Восстанавливаем сессию из localStorage, чтобы перезагрузка страницы не разлогинивала.
+  const [currentUser, setCurrentUser] = useState<Employee | null>(() => {
+    try {
+      const raw = localStorage.getItem('bahandi_user')
+      return raw ? (JSON.parse(raw) as Employee) : null
+    } catch {
+      return null
+    }
+  })
   const [login, setLogin] = useState('')
   const [password, setPassword] = useState('')
   const [authError, setAuthError] = useState('')
@@ -59,6 +67,9 @@ function App() {
   const [rejectionDraft, setRejectionDraft] = useState('')
   const [reviewError, setReviewError] = useState('')
   const [selectedRequestId, setSelectedRequestId] = useState('')
+  // --- НОВОЕ: режим массового апрува (Zen Mode) ---
+  const [selectionMode, setSelectionMode] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
 
   const lookups = useMemo(() => createLookups(data), [data])
 
@@ -102,6 +113,11 @@ function App() {
     }, 5000)
     return () => clearInterval(interval)
   }, [currentUser, form, webView])
+
+  // Кнопка «Обновить» — полная перезагрузка страницы (сессия сохранена в localStorage).
+  function handleRefresh() {
+    window.location.reload()
+  }
 
   const pendingRequests = useMemo(
     () =>
@@ -162,6 +178,8 @@ function App() {
       const result = await loginUser(login, password)
       const payload = await loadBootstrap(result.user.id)
       setCurrentUser(result.user)
+      // Сохраняем сессию, чтобы пережить перезагрузку страницы.
+      localStorage.setItem('bahandi_user', JSON.stringify(result.user))
       setData(payload)
       setWebView(result.user.role === 'sender' ? 'create' : 'review')
       
@@ -184,6 +202,7 @@ function App() {
 
   function handleLogout() {
     setCurrentUser(null)
+    localStorage.removeItem('bahandi_user')
     setPassword('')
     setAuthError('')
     setData(emptyData)
@@ -191,6 +210,8 @@ function App() {
     setFormMode('initial')
     setAiHint('')
     setWebView('create')
+    setSelectionMode(false)
+    setSelectedIds([])
     navigate('/login')
   }
 
@@ -345,9 +366,10 @@ function App() {
     }
   }
 
-  async function rejectRequest(requestId: string) {
+  async function rejectRequest(requestId: string, reasonOverride?: string) {
     if (!currentUser) return
-    const reason = rejectionDraft.trim()
+    // reasonOverride приходит из быстрых причин (свайп влево), иначе берём из textarea.
+    const reason = (reasonOverride ?? rejectionDraft).trim()
     if (reason.length < 8) {
       setReviewError('Укажите причину отклонения.')
       return
@@ -365,6 +387,52 @@ function App() {
     } finally {
       setIsSaving(false)
     }
+  }
+
+  // --- НОВОЕ: управление выбором заявок для массового апрува ---
+  function startSelection(requestId: string) {
+    setSelectionMode(true)
+    setSelectedIds((prev) => (prev.includes(requestId) ? prev : [...prev, requestId]))
+  }
+
+  function toggleSelection(requestId: string) {
+    setSelectedIds((prev) => {
+      const next = prev.includes(requestId)
+        ? prev.filter((id) => id !== requestId)
+        : [...prev, requestId]
+      if (next.length === 0) setSelectionMode(false)
+      return next
+    })
+  }
+
+  function clearSelection() {
+    setSelectionMode(false)
+    setSelectedIds([])
+  }
+
+  async function bulkApproveRequests() {
+    if (!currentUser || selectedIds.length === 0) return
+    try {
+      setIsSaving(true)
+      setReviewError('')
+      for (const requestId of selectedIds) {
+        await approveWriteOff(requestId, currentUser.id)
+      }
+      clearSelection()
+      await refreshData()
+    } catch (error) {
+      setReviewError(
+        error instanceof Error ? error.message : 'Не удалось одобрить выбранные заявки.',
+      )
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  // Переключение вкладок проверяющего сбрасывает режим выбора.
+  function handleReviewerWebView(view: WebView) {
+    clearSelection()
+    setWebView(view)
   }
 
   const homePath = currentUser?.role === 'reviewer' ? '/reviewer' : '/employee'
@@ -399,12 +467,7 @@ function App() {
 
         {currentUser ? (
           <div className="header-actions">
-            <button
-              type="button"
-              className="header-refresh"
-              onClick={() => void refreshData()}
-              disabled={isSaving}
-            >
+            <button type="button" className="header-refresh" onClick={handleRefresh}>
               <RefreshCw size={17} />
               Обновить
             </button>
@@ -497,12 +560,18 @@ function App() {
                   reviewError={reviewError}
                   rejectionDraft={rejectionDraft}
                   isSaving={isSaving}
-                  onWebViewChange={setWebView}
+                  onWebViewChange={handleReviewerWebView}
                   onSelect={setSelectedRequestId}
                   onSearch={setSearchTerm}
                   onApprove={approveRequest}
                   onReject={rejectRequest}
                   onRejectionDraft={setRejectionDraft}
+                  selectionMode={selectionMode}
+                  selectedIds={selectedIds}
+                  onLongPress={startSelection}
+                  onToggleSelect={toggleSelection}
+                  onBulkApprove={bulkApproveRequests}
+                  onClearSelection={clearSelection}
                 />
               ) : (
                 <Navigate to={currentUser ? '/employee' : '/login'} replace />
