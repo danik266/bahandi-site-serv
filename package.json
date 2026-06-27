@@ -1,18 +1,20 @@
 {
-  "name": "bahandi-site-serv",
+  "name": "bahandi",
   "private": true,
-  "version": "1.0.0",
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
+    "dev:web": "vite --host 0.0.0.0",
     "build": "tsc -b && vite build",
-    "lint": "oxlint",
+    "lint": "oxlint src vite.config.ts",
     "preview": "vite preview"
   },
   "dependencies": {
     "lucide-react": "^1.21.0",
     "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react-dom": "^19.2.7",
+    "react-router-dom": "^7.18.0"
   },
   "devDependencies": {
     "@types/node": "^24.13.2",

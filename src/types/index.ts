@@ -101,3 +101,20 @@ export type CreateRequestPayload = {
   photoHash: string
   createdById: string
 }
+
+export type Lookups = {
+  outlet: (id: string) => Outlet
+  product: (id: string) => Product
+  employee: (id: string) => Employee
+  reason: (id: string) => Reason
+}
+
+export type Metrics = {
+  today: number
+  pending: number
+  approved: number
+  rejected: number
+  iikoErrors: number
+  withDeduction: number
+  totalAmount: number
+}
