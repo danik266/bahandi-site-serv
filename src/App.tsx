@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
-import { AlertTriangle, LoaderCircle, LogOut, RefreshCw } from 'lucide-react'
+import { AlertTriangle, Database, LoaderCircle, LogOut, RefreshCw } from 'lucide-react'
 import {
   approveWriteOff,
   createWriteOff,
@@ -20,6 +20,7 @@ import { clearDraft, loadDraft, saveDraft } from './lib/draft'
 import { LoginPage } from './pages/LoginPage'
 import { EmployeePage } from './pages/EmployeePage'
 import { ReviewerPage } from './pages/ReviewerPage'
+import { IikoMockPage } from './pages/IikoMockPage'
 import { SubmitPreviewModal, SuccessToast } from './components/writeoff'
 import type {
   BootstrapPayload,
@@ -508,6 +509,10 @@ function App() {
 
         {currentUser ? (
           <div className="header-actions">
+            <button type="button" className="header-iiko" onClick={() => navigate('/iiko')}>
+              <Database size={17} />
+              Iiko mock
+            </button>
             <button type="button" className="header-refresh" onClick={handleRefresh}>
               <RefreshCw size={17} />
               Обновить
@@ -534,6 +539,7 @@ function App() {
         </div>
       ) : (
         <Routes>
+          <Route path="/iiko" element={<IikoMockPage />} />
           <Route
             path="/login"
             element={
@@ -630,4 +636,3 @@ function App() {
 }
 
 export default App
-

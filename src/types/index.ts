@@ -142,3 +142,56 @@ export type Metrics = {
   withDeduction: number
   totalAmount: number
 }
+
+export type IikoMockDocument = {
+  id: string
+  requestId: string
+  status: 'created'
+  createdAt: string
+  source: 'mock-adapter'
+  outlet: {
+    id: string
+    name: string
+    iikoStoreId: string
+  }
+  product: {
+    id: string
+    name: string
+    iikoProductId: string
+    quantity: number
+    unit: string
+    cost: number
+    amount: number
+  }
+  reason: {
+    id: string
+    name: string
+  }
+  sender: {
+    id: string
+    name: string
+    iikoEmployeeId: string
+  }
+  reviewer: {
+    id: string
+    name: string
+    iikoEmployeeId: string
+  }
+  deductionEmployee?: {
+    id: string
+    name: string
+    iikoEmployeeId: string
+  }
+  comment: string
+  payload: {
+    documentType: 'WRITEOFF_DOCUMENT'
+    externalNumber: string
+    storeId: string
+    items: Array<{
+      productId: string
+      amount: number
+      unit: string
+      comment: string
+    }>
+  }
+}
