@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import {
-  AlertTriangle,
   ArrowRight,
   Eye,
   EyeOff,
@@ -51,7 +50,7 @@ export function LoginPage({
         <h1 className="auth-title">Добро пожаловать!</h1>
         <p className="auth-sub">
           Войдите личным логином
-          <br />и пин-кодом.
+          <br />и паролем.
         </p>
 
         <label className="auth-field">
@@ -61,6 +60,7 @@ export function LoginPage({
             <input
               value={login}
               autoComplete="username"
+              autoCapitalize="none"
               placeholder="Например: aibek"
               onChange={(event) => onLoginChange(event.target.value)}
             />
@@ -100,9 +100,8 @@ export function LoginPage({
         </label>
 
         {authError && (
-          <div className="inline-alert">
-            <AlertTriangle size={17} />
-            {authError}
+          <div className="login-error-box-inline">
+            <p className="login-error-text">{authError}</p>
           </div>
         )}
 
