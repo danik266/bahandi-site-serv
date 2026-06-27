@@ -1,24 +1,17 @@
-import {
-  BarChart3,
-  CalendarRange,
-  CheckCircle2,
-  CircleDollarSign,
-  Database,
-  Download,
-  FileText,
-  Hash,
-  MessageSquareText,
-  PieChart,
-  Scale,
-  ShieldCheck,
-  UserCheck,
-  XCircle,
-} from 'lucide-react'
-import { BarList, Metric, PanelTitle, RiskItem } from '../ui'
-import { buildBars, countDuplicateHashes, getRequestCost } from '../../lib/request'
-import type { BootstrapPayload, Lookups, Metrics, WriteOffRequest } from '../../types'
+import { useMemo, useState } from 'react'
+import { BarChart3, Download } from 'lucide-react'
+import { PanelTitle } from '../ui'
+import { moneyFormatter } from '../../lib/format'
+import { getRequestCost } from '../../lib/request'
+import type { BootstrapPayload, Lookups, Metrics } from '../../types'
 
-type Segment = { label: string; value: number; color: string }
+type StatsTab = 'outlets' | 'employees' | 'reasons'
+type StatsItem = {
+  id: string
+  name: string
+  detail?: string
+  amount: number
+}
 
 export function AnalyticsView({
   data,
@@ -29,43 +22,87 @@ export function AnalyticsView({
   metrics: Metrics
   lookups: Lookups
 }) {
-  const byReason = buildBars(
-    data.reasons.map((reason) => ({
-      label: reason.name,
-      value: data.requests.filter((request) => request.reasonId === reason.id).length,
-    })),
-  )
-  const byProduct = buildBars(
-    data.products.map((product) => ({
-      label: product.name,
-      value: data.requests
-        .filter((request) => request.productId === product.id)
-        .reduce((sum, request) => sum + request.quantity, 0),
-    })),
-  )
-  const duplicatePhotoCount = countDuplicateHashes(data.requests)
-  const highValueCount = data.requests.filter((request) => getRequestCost(request, lookups) > 1000).length
+  const [activeTab, setActiveTab] = useState<StatsTab>('outlets')
 
-  // Кольцевая диаграмма по статусам.
-  const statusSegments: Segment[] = [
-    { label: 'Подтверждено', value: metrics.approved, color: 'var(--green)' },
-    { label: 'Отклонено', value: metrics.rejected, color: 'var(--red)' },
-    { label: 'На проверке', value: metrics.pending, color: 'var(--orange)' },
-    { label: 'Ошибка Iiko', value: metrics.iikoErrors, color: '#6b6259' },
-  ].filter((segment) => segment.value > 0)
-  const statusTotal = data.requests.length
+  const approvedRequests = useMemo(
+    () => data.requests.filter((request) => request.status === 'approved'),
+    [data.requests],
+  )
+  const totalSum = approvedRequests.reduce(
+    (sum, request) => sum + getRequestCost(request, lookups),
+    0,
+  )
+  const deductionsSum = approvedRequests
+    .filter((request) => request.type === 'with_deduction')
+    .reduce((sum, request) => sum + getRequestCost(request, lookups), 0)
+  const averageSum = metrics.approved > 0 ? totalSum / metrics.approved : 0
 
-  // Тренд за последние 7 дней (кол-во заявок).
-  const trend = buildDailyTrend(data.requests)
-  const trendMax = Math.max(1, ...trend.map((day) => day.count))
+  const outletStats = useMemo<StatsItem[]>(() => {
+    const totals = new Map<string, number>()
+    approvedRequests.forEach((request) => {
+      totals.set(request.outletId, (totals.get(request.outletId) ?? 0) + getRequestCost(request, lookups))
+    })
+
+    return data.outlets
+      .map((outlet) => ({
+        id: outlet.id,
+        name: outlet.name,
+        detail: outlet.city,
+        amount: totals.get(outlet.id) ?? 0,
+      }))
+      .filter((item) => item.amount > 0)
+      .sort((a, b) => b.amount - a.amount)
+  }, [approvedRequests, data.outlets, lookups])
+
+  const employeeStats = useMemo<StatsItem[]>(() => {
+    const totals = new Map<string, number>()
+    approvedRequests.forEach((request) => {
+      totals.set(request.createdById, (totals.get(request.createdById) ?? 0) + getRequestCost(request, lookups))
+    })
+
+    return data.employees
+      .map((employee) => ({
+        id: employee.id,
+        name: employee.name,
+        detail: employee.role === 'sender' ? 'Сотрудник' : 'Проверяющий',
+        amount: totals.get(employee.id) ?? 0,
+      }))
+      .filter((item) => item.amount > 0)
+      .sort((a, b) => b.amount - a.amount)
+  }, [approvedRequests, data.employees, lookups])
+
+  const reasonStats = useMemo<StatsItem[]>(() => {
+    const totals = new Map<string, number>()
+    approvedRequests.forEach((request) => {
+      totals.set(request.reasonId, (totals.get(request.reasonId) ?? 0) + getRequestCost(request, lookups))
+    })
+
+    return data.reasons
+      .map((reason) => ({
+        id: reason.id,
+        name: reason.name,
+        amount: totals.get(reason.id) ?? 0,
+      }))
+      .filter((item) => item.amount > 0)
+      .sort((a, b) => b.amount - a.amount)
+  }, [approvedRequests, data.reasons, lookups])
+
+  const activeStats =
+    activeTab === 'outlets'
+      ? outletStats
+      : activeTab === 'employees'
+        ? employeeStats
+        : reasonStats
+  const maxAmount = Math.max(1, ...activeStats.map((item) => item.amount))
 
   function exportAnalytics() {
     const rows = [
-      ['id', 'status', 'outlet', 'product', 'quantity', 'amount', 'createdAt'],
+      ['id', 'status', 'outlet', 'employee', 'product', 'quantity', 'amount', 'createdAt'],
       ...data.requests.map((request) => [
         request.id,
         request.status,
         lookups.outlet(request.outletId).name,
+        lookups.employee(request.createdById).name,
         lookups.product(request.productId).name,
         String(request.quantity),
         String(getRequestCost(request, lookups)),
@@ -83,115 +120,89 @@ export function AnalyticsView({
   }
 
   return (
-    <section className="workspace analytics-grid">
+    <section className="workspace analytics-grid mobile-like-stats">
       <div className="panel analytics-summary">
         <div className="analytics-title-row">
-          <PanelTitle icon={BarChart3} title="Итоги смены" detail="сегодня" />
+          <PanelTitle icon={BarChart3} title="Сводные данные" detail="утверждено" />
           <button type="button" className="analytics-export" onClick={exportAnalytics}>
             <Download size={17} />
             Экспорт
           </button>
         </div>
-        <div className="analytics-cards">
-          <Metric icon={FileText} label="Заявок сегодня" value={metrics.today} tone="black" />
-          <Metric icon={CheckCircle2} label="Закрыто" value={metrics.approved} tone="green" />
-          <Metric icon={XCircle} label="Отклонено" value={metrics.rejected} tone="red" />
-          <Metric
-            icon={Database}
-            label="В Iiko"
-            value={metrics.approved - metrics.iikoErrors}
-            tone="orange"
-          />
-        </div>
-      </div>
 
-      <div className="panel">
-        <PanelTitle icon={PieChart} title="Статусы заявок" detail="всего" />
-        <div className="donut-wrap">
-          <div className="donut" style={{ background: buildConic(statusSegments, statusTotal) }}>
-            <div className="donut-center">
-              <strong>{statusTotal}</strong>
-              <span>заявок</span>
-            </div>
+        <div className="stats-kpi-grid">
+          <div className="stats-kpi-card green">
+            <span>Сумма списаний</span>
+            <strong>{moneyFormatter.format(totalSum)}</strong>
           </div>
-          <div className="donut-legend">
-            {statusSegments.length === 0 && <span className="donut-empty">Нет данных</span>}
-            {statusSegments.map((segment) => (
-              <div key={segment.label} className="legend-item">
-                <span className="legend-dot" style={{ background: segment.color }} />
-                <span className="legend-label">{segment.label}</span>
-                <strong>{segment.value}</strong>
-              </div>
-            ))}
+          <div className="stats-kpi-card red">
+            <span>Сумма удержаний</span>
+            <strong>{moneyFormatter.format(deductionsSum)}</strong>
+          </div>
+          <div className="stats-kpi-card">
+            <span>Среднее списание</span>
+            <strong>{moneyFormatter.format(averageSum)}</strong>
+          </div>
+          <div className="stats-kpi-card">
+            <span>Всего заявок</span>
+            <strong>{data.requests.length} шт</strong>
+            <small>
+              Утв: {metrics.approved} · Откл: {metrics.rejected} · Ожид: {metrics.pending}
+            </small>
           </div>
         </div>
       </div>
 
-      <div className="panel">
-        <PanelTitle icon={CalendarRange} title="Динамика за 7 дней" detail="заявки" />
-        <div className="trend-chart">
-          {trend.map((day) => (
-            <div key={day.key} className="trend-col">
-              <span className="trend-count">{day.count}</span>
-              <div className="trend-bar-track">
-                <span
-                  className="trend-bar"
-                  style={{ height: `${day.count === 0 ? 2 : (day.count / trendMax) * 100}%` }}
-                />
+      <div className="stats-segmented" role="tablist" aria-label="Статистика">
+        <button
+          type="button"
+          className={activeTab === 'outlets' ? 'active' : ''}
+          onClick={() => setActiveTab('outlets')}
+        >
+          По точкам
+        </button>
+        <button
+          type="button"
+          className={activeTab === 'employees' ? 'active' : ''}
+          onClick={() => setActiveTab('employees')}
+        >
+          Сотрудники
+        </button>
+        <button
+          type="button"
+          className={activeTab === 'reasons' ? 'active' : ''}
+          onClick={() => setActiveTab('reasons')}
+        >
+          Причины
+        </button>
+      </div>
+
+      <div className="panel stats-list-panel">
+        {activeStats.length === 0 ? (
+          <div className="empty-state stats-empty">
+            <strong>Пока нет утвержденных заявок</strong>
+          </div>
+        ) : (
+          activeStats.map((item) => (
+            <div key={item.id} className="stats-chart-item">
+              <div className="stats-chart-head">
+                <div>
+                  <strong>{item.name}</strong>
+                  {item.detail && <span>{item.detail}</span>}
+                </div>
+                <b>{moneyFormatter.format(item.amount)}</b>
               </div>
-              <span className="trend-day">{day.label}</span>
+              <div className="stats-progress">
+                <span style={{ width: `${Math.max(4, (item.amount / maxAmount) * 100)}%` }} />
+              </div>
             </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="panel">
-        <PanelTitle icon={MessageSquareText} title="Причины" detail="top" />
-        <BarList items={byReason} unit="заяв." />
-      </div>
-
-      <div className="panel">
-        <PanelTitle icon={Scale} title="Продукты" detail="qty" />
-        <BarList items={byProduct} unit="ед." />
-      </div>
-
-      <div className="panel control-panel">
-        <PanelTitle icon={ShieldCheck} title="Контроль" detail="flags" />
-        <RiskItem icon={Hash} label="Повтор фото" value={duplicatePhotoCount} />
-        <RiskItem icon={CircleDollarSign} label="Высокая сумма" value={highValueCount} />
-        <RiskItem icon={UserCheck} label="Удержания" value={metrics.withDeduction} />
+          ))
+        )}
       </div>
     </section>
   )
 }
 
-// Собираем conic-gradient из сегментов для кольцевой диаграммы.
-function buildConic(segments: Segment[], total: number) {
-  if (total <= 0 || segments.length === 0) return 'var(--surface-soft)'
-  let acc = 0
-  const stops = segments.map((segment) => {
-    const start = (acc / total) * 100
-    acc += segment.value
-    const end = (acc / total) * 100
-    return `${segment.color} ${start}% ${end}%`
-  })
-  return `conic-gradient(${stops.join(', ')})`
-}
-
 function escapeCsvCell(value: string) {
   return `"${value.replace(/"/g, '""')}"`
-}
-
-// Последние 7 дней: метка-число дня + количество заявок.
-function buildDailyTrend(requests: WriteOffRequest[]) {
-  const base = new Date()
-  const days: Array<{ key: string; label: string; count: number }> = []
-  for (let offset = 6; offset >= 0; offset -= 1) {
-    const date = new Date(base)
-    date.setDate(base.getDate() - offset)
-    const key = date.toISOString().slice(0, 10)
-    const count = requests.filter((request) => request.createdAt.startsWith(key)).length
-    days.push({ key, label: String(date.getDate()), count })
-  }
-  return days
 }

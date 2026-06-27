@@ -9,6 +9,7 @@ export type Outlet = {
   id: string
   name: string
   address: string
+  city: string
   iikoStoreId: string
 }
 
@@ -129,6 +130,15 @@ export type CreateRequestPayload = {
   photoUrls?: string[]
   photoNames?: string[]
   photoHash: string
+  createdById: string
+}
+
+export type CreateEmployeePayload = {
+  name: string
+  login: string
+  pinCode: string
+  city: string
+  role: Role
   createdById: string
 }
 

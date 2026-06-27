@@ -13,6 +13,7 @@ import {
   Database,
   History,
   RotateCcw,
+  UserPlus,
   X,
 } from 'lucide-react'
 import { Metric, PanelTitle } from '../components/ui'
@@ -28,8 +29,10 @@ import { getRequestCost } from '../lib/request'
 import { getFraudScore } from '../lib/scoring'
 import type {
   BootstrapPayload,
+  Employee,
   Lookups,
   Metrics,
+  Role,
   WebView,
   WriteOffRequest,
 } from '../types'
@@ -39,6 +42,13 @@ const REJECT_REASONS = ['Некачественное фото', 'Недоста
 const UNDO_MS = 5000
 
 type LastAction = { id: string; type: 'approve' | 'reject'; reason?: string }
+type ReviewerPageEmployeeForm = {
+  name: string
+  city: string
+  login: string
+  pinCode: string
+  role: Role
+}
 
 // --- НОВОЕ: варианты сортировки очереди ---
 type SortBy = 'time' | 'sum' | 'risk'
@@ -76,6 +86,14 @@ export function ReviewerPage({
   onBulkApprove,
   onBulkReject,
   onClearSelection,
+  currentUser,
+  isAddEmployeeOpen,
+  employeeForm,
+  employeeError,
+  onAddEmployeeOpen,
+  onAddEmployeeClose,
+  onEmployeeFieldChange,
+  onEmployeeSave,
 }: {
   data: BootstrapPayload
   metrics: Metrics
@@ -104,6 +122,17 @@ export function ReviewerPage({
   onBulkApprove: () => void
   onBulkReject: (reason: string) => void
   onClearSelection: () => void
+  currentUser: Employee
+  isAddEmployeeOpen: boolean
+  employeeForm: ReviewerPageEmployeeForm
+  employeeError: string
+  onAddEmployeeOpen: () => void
+  onAddEmployeeClose: () => void
+  onEmployeeFieldChange: <K extends keyof ReviewerPageEmployeeForm>(
+    key: K,
+    value: ReviewerPageEmployeeForm[K],
+  ) => void
+  onEmployeeSave: () => void
 }) {
   const limitUsed = metrics.totalAmount
   const limitPercent = Math.min(100, Math.round((limitUsed / DAILY_WRITEOFF_LIMIT) * 100))
@@ -235,6 +264,13 @@ export function ReviewerPage({
 
   return (
     <main className={`web-dashboard${selectedIds.length > 0 ? ' has-bulk-bar' : ''}`}>
+      {currentUser.accessScope === 'all' && (
+        <button type="button" className="manager-add-button" onClick={onAddEmployeeOpen}>
+          <UserPlus size={19} />
+          Добавить сотрудника
+        </button>
+      )}
+
       <nav className="web-tabs">
         <button
           type="button"
@@ -447,6 +483,16 @@ export function ReviewerPage({
       {webView === 'analytics' && (
         <AnalyticsView data={data} metrics={metrics} lookups={lookups} />
       )}
+
+      <AddEmployeeDialog
+        open={isAddEmployeeOpen}
+        form={employeeForm}
+        error={employeeError}
+        isSaving={isSaving}
+        onClose={onAddEmployeeClose}
+        onFieldChange={onEmployeeFieldChange}
+        onSave={onEmployeeSave}
+      />
 
       {/* --- Плавающая нижняя панель массового апрува/отказа --- */}
       {selectedIds.length > 0 && (
@@ -680,5 +726,136 @@ export function ReviewerPage({
         )}
       </AnimatePresence>
     </main>
+  )
+}
+
+const CITIES = [
+  'Астана',
+  'Алматы',
+  'Усть-Каменогорск',
+  'Шымкент',
+  'Караганда',
+  'Актау',
+  'Атырау',
+  'Кокшетау',
+  'Костанай',
+  'Тараз',
+  'Актобе',
+]
+
+function AddEmployeeDialog({
+  open,
+  form,
+  error,
+  isSaving,
+  onClose,
+  onFieldChange,
+  onSave,
+}: {
+  open: boolean
+  form: ReviewerPageEmployeeForm
+  error: string
+  isSaving: boolean
+  onClose: () => void
+  onFieldChange: <K extends keyof ReviewerPageEmployeeForm>(
+    key: K,
+    value: ReviewerPageEmployeeForm[K],
+  ) => void
+  onSave: () => void
+}) {
+  if (!open) return null
+
+  return (
+    <div className="modal-overlay add-employee-overlay" onClick={onClose}>
+      <div className="modal-content add-employee-dialog" onClick={(event) => event.stopPropagation()}>
+        <button type="button" className="modal-close" onClick={onClose} aria-label="Закрыть">
+          <X size={20} />
+        </button>
+        <h2>Новый сотрудник</h2>
+
+        <div className="add-employee-form">
+          <label>
+            <span>ФИО</span>
+            <input
+              value={form.name}
+              placeholder="Иван Иванов"
+              onChange={(event) => onFieldChange('name', event.target.value)}
+            />
+          </label>
+
+          <label>
+            <span>Город</span>
+            <select
+              value={form.city}
+              onChange={(event) => onFieldChange('city', event.target.value)}
+            >
+              {CITIES.map((city) => (
+                <option key={city} value={city}>
+                  {city}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <div className="form-row">
+            <label>
+              <span>Логин</span>
+              <input
+                value={form.login}
+                placeholder="ivan"
+                autoCapitalize="none"
+                autoCorrect="off"
+                onChange={(event) => onFieldChange('login', event.target.value)}
+              />
+            </label>
+            <label>
+              <span>PIN (4-6)</span>
+              <input
+                value={form.pinCode}
+                placeholder="1111"
+                inputMode="numeric"
+                maxLength={6}
+                type="password"
+                onChange={(event) => onFieldChange('pinCode', event.target.value)}
+              />
+            </label>
+          </div>
+
+          <div className="segmented employee-role-segmented">
+            <button
+              type="button"
+              className={form.role === 'sender' ? 'active' : ''}
+              onClick={() => onFieldChange('role', 'sender')}
+            >
+              Сотрудник
+            </button>
+            <button
+              type="button"
+              className={form.role === 'reviewer' ? 'active' : ''}
+              onClick={() => onFieldChange('role', 'reviewer')}
+            >
+              Проверяющий
+            </button>
+          </div>
+
+          {error && (
+            <div className="inline-alert">
+              <AlertTriangle size={17} />
+              {error}
+            </div>
+          )}
+
+          <div className="modal-actions">
+            <button type="button" className="button white" onClick={onClose} disabled={isSaving}>
+              Отмена
+            </button>
+            <button type="button" className="button green" onClick={onSave} disabled={isSaving}>
+              <UserPlus size={18} />
+              Добавить
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }

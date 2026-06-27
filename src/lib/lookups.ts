@@ -11,6 +11,7 @@ export const fallbackOutlet: Outlet = {
   id: 'outlet-fallback',
   name: 'Bahandi',
   address: 'Алматы',
+  city: 'Алматы',
   iikoStoreId: 'store_demo',
 }
 

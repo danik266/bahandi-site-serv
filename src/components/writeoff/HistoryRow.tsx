@@ -15,10 +15,14 @@ export function HistoryRow({
 }) {
   const product = lookups.product(request.productId)
   const outlet = lookups.outlet(request.outletId)
+  const photos = request.photoUrls?.length ? request.photoUrls : [request.photoUrl]
 
   const content = (
     <>
-      <img src={request.photoUrl} alt="" />
+      <span className="history-photo">
+        <img src={photos[0]} alt="" />
+        {photos.length > 1 && <small>{photos.length}</small>}
+      </span>
       <div className="history-main">
         <strong>#{request.id} · {product.name}</strong>
         <span>{outlet.name}</span>

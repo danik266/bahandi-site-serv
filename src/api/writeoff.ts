@@ -1,4 +1,4 @@
-import type { CreateRequestPayload, WriteOffRequest } from '../types'
+import type { CreateEmployeePayload, CreateRequestPayload, Employee, WriteOffRequest } from '../types'
 import { requestJson } from './client'
 
 export async function createWriteOff(payload: CreateRequestPayload) {
@@ -27,5 +27,12 @@ export async function rejectWriteOff(
   return requestJson<{ request: WriteOffRequest }>(`/requests/${requestId}/reject`, {
     method: 'PATCH',
     body: JSON.stringify({ reviewedById, rejectionReason }),
+  })
+}
+
+export async function createEmployee(payload: CreateEmployeePayload) {
+  return requestJson<{ user: Employee }>('/employees', {
+    method: 'POST',
+    body: JSON.stringify(payload),
   })
 }

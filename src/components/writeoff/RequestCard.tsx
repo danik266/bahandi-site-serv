@@ -34,6 +34,7 @@ export function RequestCard({
   const risk = getRequestCost(request, lookups) > 1000 || request.type === 'with_deduction'
   // --- НОВОЕ: AI-скоринг ---
   const tone = getScoreTone(request)
+  const photos = request.photoUrls?.length ? request.photoUrls : [request.photoUrl]
 
   // --- НОВОЕ: long-press логика (без захламления UI чекбоксами) ---
   const timerRef = useRef<number | null>(null)
@@ -104,7 +105,10 @@ export function RequestCard({
       onContextMenu={(event) => event.preventDefault()}
     >
       {tone && <span className={`score-dot score-${tone}`} aria-hidden="true" />}
-      <img className={tone ? `score-${tone}` : undefined} src={request.photoUrl} alt="" />
+      <span className="request-card-photo">
+        <img className={tone ? `score-${tone}` : undefined} src={photos[0]} alt="" />
+        {photos.length > 1 && <small>{photos.length}</small>}
+      </span>
       <div>
         <div className="request-card-title">
           <strong>#{request.id} · {product.name}</strong>

@@ -4,6 +4,7 @@ import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import { AlertTriangle, Database, LoaderCircle, LogOut, RefreshCw } from 'lucide-react'
 import {
   approveWriteOff,
+  createEmployee,
   createWriteOff,
   loadBootstrap,
   loginUser,
@@ -76,6 +77,15 @@ function App() {
   // --- НОВОЕ: режим массового апрува (Zen Mode) ---
   const [selectionMode, setSelectionMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [isAddEmployeeOpen, setIsAddEmployeeOpen] = useState(false)
+  const [employeeForm, setEmployeeForm] = useState({
+    name: '',
+    city: 'Астана',
+    login: '',
+    pinCode: '',
+    role: 'sender' as Employee['role'],
+  })
+  const [employeeError, setEmployeeError] = useState('')
 
   const lookups = useMemo(() => createLookups(data), [data])
 
@@ -178,7 +188,7 @@ function App() {
   }, [currentUser?.role, data.requests, lookups, myRequests, searchTerm])
 
   const metrics = useMemo<Metrics>(() => {
-    const today = '2026-06-27'
+    const today = new Date().toISOString().slice(0, 10)
     const todayRequests = data.requests.filter((request) => request.createdAt.startsWith(today))
     return {
       today: todayRequests.length,
@@ -193,6 +203,39 @@ function App() {
       ),
     }
   }, [data.requests, lookups])
+
+  function setEmployeeField<K extends keyof typeof employeeForm>(
+    key: K,
+    value: (typeof employeeForm)[K],
+  ) {
+    setEmployeeForm((current) => ({ ...current, [key]: value }))
+    setEmployeeError('')
+  }
+
+  async function handleCreateEmployee() {
+    if (!currentUser) return
+    try {
+      setIsSaving(true)
+      setEmployeeError('')
+      await createEmployee({
+        ...employeeForm,
+        createdById: currentUser.id,
+      })
+      setEmployeeForm({
+        name: '',
+        city: employeeForm.city,
+        login: '',
+        pinCode: '',
+        role: 'sender',
+      })
+      setIsAddEmployeeOpen(false)
+      await refreshData(currentUser)
+    } catch (error) {
+      setEmployeeError(error instanceof Error ? error.message : 'Не удалось добавить сотрудника.')
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -692,6 +735,17 @@ function App() {
                   onBulkApprove={bulkApproveRequests}
                   onBulkReject={bulkRejectRequests}
                   onClearSelection={clearSelection}
+                  currentUser={currentUser}
+                  isAddEmployeeOpen={isAddEmployeeOpen}
+                  employeeForm={employeeForm}
+                  employeeError={employeeError}
+                  onAddEmployeeOpen={() => setIsAddEmployeeOpen(true)}
+                  onAddEmployeeClose={() => {
+                    setIsAddEmployeeOpen(false)
+                    setEmployeeError('')
+                  }}
+                  onEmployeeFieldChange={setEmployeeField}
+                  onEmployeeSave={handleCreateEmployee}
                 />
               ) : (
                 <Navigate to={currentUser ? '/employee' : '/login'} replace />
