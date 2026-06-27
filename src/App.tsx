@@ -44,6 +44,9 @@ function App() {
   const [rejectionDraft, setRejectionDraft] = useState('')
   const [reviewError, setReviewError] = useState('')
   const [selectedRequestId, setSelectedRequestId] = useState('')
+  // --- НОВОЕ: режим массового апрува (Zen Mode) ---
+  const [selectionMode, setSelectionMode] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
 
   const lookups = useMemo(() => createLookups(data), [data])
 
@@ -153,6 +156,8 @@ function App() {
     setData(emptyData)
     setForm(createEmptyForm())
     setWebView('create')
+    setSelectionMode(false)
+    setSelectedIds([])
     navigate('/login')
   }
 
@@ -278,6 +283,52 @@ function App() {
     }
   }
 
+  // --- НОВОЕ: управление выбором заявок для массового апрува ---
+  function startSelection(requestId: string) {
+    setSelectionMode(true)
+    setSelectedIds((prev) => (prev.includes(requestId) ? prev : [...prev, requestId]))
+  }
+
+  function toggleSelection(requestId: string) {
+    setSelectedIds((prev) => {
+      const next = prev.includes(requestId)
+        ? prev.filter((id) => id !== requestId)
+        : [...prev, requestId]
+      if (next.length === 0) setSelectionMode(false)
+      return next
+    })
+  }
+
+  function clearSelection() {
+    setSelectionMode(false)
+    setSelectedIds([])
+  }
+
+  async function bulkApproveRequests() {
+    if (!currentUser || selectedIds.length === 0) return
+    try {
+      setIsSaving(true)
+      setReviewError('')
+      for (const requestId of selectedIds) {
+        await approveWriteOff(requestId, currentUser.id)
+      }
+      clearSelection()
+      await refreshData()
+    } catch (error) {
+      setReviewError(
+        error instanceof Error ? error.message : 'Не удалось одобрить выбранные заявки.',
+      )
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  // Переключение вкладок проверяющего сбрасывает режим выбора.
+  function handleReviewerWebView(view: WebView) {
+    clearSelection()
+    setWebView(view)
+  }
+
   const homePath = currentUser?.role === 'reviewer' ? '/reviewer' : '/employee'
 
   return (
@@ -386,12 +437,18 @@ function App() {
                   reviewError={reviewError}
                   rejectionDraft={rejectionDraft}
                   isSaving={isSaving}
-                  onWebViewChange={setWebView}
+                  onWebViewChange={handleReviewerWebView}
                   onSelect={setSelectedRequestId}
                   onSearch={setSearchTerm}
                   onApprove={approveRequest}
                   onReject={rejectRequest}
                   onRejectionDraft={setRejectionDraft}
+                  selectionMode={selectionMode}
+                  selectedIds={selectedIds}
+                  onLongPress={startSelection}
+                  onToggleSelect={toggleSelection}
+                  onBulkApprove={bulkApproveRequests}
+                  onClearSelection={clearSelection}
                 />
               ) : (
                 <Navigate to={currentUser ? '/employee' : '/login'} replace />

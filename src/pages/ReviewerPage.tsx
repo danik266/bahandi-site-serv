@@ -19,6 +19,7 @@ import {
   RequestDetail,
 } from '../components/writeoff'
 import { moneyFormatter } from '../lib/format'
+import { DAILY_WRITEOFF_LIMIT } from '../lib/constants'
 import type {
   BootstrapPayload,
   Lookups,
@@ -46,6 +47,13 @@ export function ReviewerPage({
   onApprove,
   onReject,
   onRejectionDraft,
+  // --- НОВОЕ: режим массового апрува ---
+  selectionMode,
+  selectedIds,
+  onLongPress,
+  onToggleSelect,
+  onBulkApprove,
+  onClearSelection,
 }: {
   data: BootstrapPayload
   metrics: Metrics
@@ -65,9 +73,20 @@ export function ReviewerPage({
   onApprove: (requestId: string) => void
   onReject: (requestId: string) => void
   onRejectionDraft: (value: string) => void
+  selectionMode: boolean
+  selectedIds: string[]
+  onLongPress: (requestId: string) => void
+  onToggleSelect: (requestId: string) => void
+  onBulkApprove: () => void
+  onClearSelection: () => void
 }) {
+  // --- НОВОЕ: данные для мини-дашборда лимита ---
+  const limitUsed = metrics.totalAmount
+  const limitPercent = Math.min(100, Math.round((limitUsed / DAILY_WRITEOFF_LIMIT) * 100))
+  const limitOver = limitUsed > DAILY_WRITEOFF_LIMIT
+
   return (
-    <main className="web-dashboard">
+    <main className={`web-dashboard${selectedIds.length > 0 ? ' has-bulk-bar' : ''}`}>
       <nav className="web-tabs">
         <button
           type="button"
@@ -116,6 +135,20 @@ export function ReviewerPage({
         <section className="workspace review-grid">
           <div className="panel queue-panel">
             <PanelTitle icon={ClipboardCheck} title="Очередь проверки" detail="pending" />
+
+            {/* --- НОВОЕ: компактный мини-дашборд лимита --- */}
+            <div className={`limit-meter${limitOver ? ' over' : ''}`}>
+              <div className="limit-meter-head">
+                <span>Лимит списаний на сегодня</span>
+                <strong>
+                  {moneyFormatter.format(limitUsed)} / {moneyFormatter.format(DAILY_WRITEOFF_LIMIT)}
+                </strong>
+              </div>
+              <div className="limit-meter-track">
+                <span className="limit-meter-fill" style={{ width: `${limitPercent}%` }} />
+              </div>
+            </div>
+
             <div className="request-list">
               {pendingRequests.map((request) => (
                 <RequestCard
@@ -124,6 +157,10 @@ export function ReviewerPage({
                   active={selectedRequestId === request.id}
                   lookups={lookups}
                   onClick={() => onSelect(request.id)}
+                  selectionMode={selectionMode}
+                  selected={selectedIds.includes(request.id)}
+                  onLongPress={() => onLongPress(request.id)}
+                  onToggleSelect={() => onToggleSelect(request.id)}
                 />
               ))}
               {pendingRequests.length === 0 && (
@@ -201,6 +238,31 @@ export function ReviewerPage({
 
       {webView === 'analytics' && (
         <AnalyticsView data={data} metrics={metrics} lookups={lookups} />
+      )}
+
+      {/* --- НОВОЕ: плавающая нижняя панель массового апрува --- */}
+      {selectedIds.length > 0 && (
+        <div className="bulk-bar" role="region" aria-label="Массовое одобрение">
+          <div className="bulk-bar-inner">
+            <button
+              type="button"
+              className="bulk-clear-btn"
+              onClick={onClearSelection}
+              aria-label="Отменить выбор"
+            >
+              <X size={22} />
+            </button>
+            <button
+              type="button"
+              className="button green bulk-approve-btn"
+              disabled={isSaving}
+              onClick={onBulkApprove}
+            >
+              <Check size={20} />
+              Одобрить выбранные ({selectedIds.length})
+            </button>
+          </div>
+        </div>
       )}
     </main>
   )

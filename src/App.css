@@ -1487,3 +1487,168 @@ code {
     gap: 8px;
   }
 }
+
+/* ============================================================= */
+/* Фичи проверяющего: мини-дашборд, AI-скоринг, массовый апрув    */
+/* ============================================================= */
+
+/* --- Мини-дашборд «Лимит списаний на сегодня» --- */
+.limit-meter {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.limit-meter-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.limit-meter-head span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.limit-meter-head strong {
+  flex: 0 0 auto;
+  color: var(--black);
+  font-size: 0.82rem;
+}
+
+.limit-meter-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  overflow: hidden;
+}
+
+.limit-meter-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--green);
+  transition: width 0.25s ease;
+}
+
+.limit-meter.over .limit-meter-head strong {
+  color: var(--red);
+}
+
+.limit-meter.over .limit-meter-fill {
+  background: var(--red);
+}
+
+/* --- AI-скоринг: цветная рамка фото + точка-индикатор --- */
+/* Карточка получает relative, чтобы точка позиционировалась поверх фото. */
+.request-card {
+  position: relative;
+  user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+}
+
+.request-card img.score-safe {
+  box-shadow: 0 0 0 3px var(--green);
+}
+
+.request-card img.score-watch {
+  box-shadow: 0 0 0 3px var(--orange);
+}
+
+.request-card img.score-risk {
+  box-shadow: 0 0 0 3px var(--red);
+}
+
+.score-dot {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--surface);
+  border-radius: 999px;
+}
+
+.score-dot.score-safe {
+  background: var(--green);
+}
+
+.score-dot.score-watch {
+  background: var(--orange);
+}
+
+.score-dot.score-risk {
+  background: var(--red);
+}
+
+/* --- Режим выбора --- */
+.request-card.selected {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px var(--green-soft);
+}
+
+.request-card .select-icon {
+  align-self: center;
+  color: var(--muted);
+}
+
+.request-card .select-icon.on {
+  color: var(--green);
+}
+
+/* Лёгкая тактильная отдача при нажатии (мобилка, без :hover). */
+.request-card:active {
+  transform: scale(0.99);
+}
+
+/* --- Плавающая нижняя панель массового апрува --- */
+.bulk-bar {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 60;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: 0 -10px 30px rgba(32, 28, 24, 0.14);
+}
+
+.bulk-bar-inner {
+  display: flex;
+  gap: 10px;
+  width: min(1180px, 100%);
+  margin: 0 auto;
+}
+
+.bulk-clear-btn {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  min-height: 52px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  color: var(--black);
+  background: #ffffff;
+}
+
+.bulk-approve-btn {
+  flex: 1 1 auto;
+  min-height: 52px;
+  font-size: 1rem;
+}
+
+.bulk-clear-btn:active,
+.bulk-approve-btn:active {
+  transform: scale(0.99);
+}
+
+/* Резерв снизу, чтобы панель не перекрывала последнюю карточку. */
+.web-dashboard.has-bulk-bar {
+  padding-bottom: 84px;
+}
