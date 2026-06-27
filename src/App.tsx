@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import { AlertTriangle, LoaderCircle, LogOut, RefreshCw } from 'lucide-react'
@@ -84,6 +84,24 @@ function App() {
   useEffect(() => {
     void refreshData()
   }, [refreshData])
+
+  // Чтобы polling не дёргал список во время сохранения (апрув/отказ).
+  const isSavingRef = useRef(isSaving)
+  useEffect(() => {
+    isSavingRef.current = isSaving
+  }, [isSaving])
+
+  // Авто-обновление очереди проверяющего (фоновый polling каждые 20с).
+  useEffect(() => {
+    if (currentUser?.role !== 'reviewer') return
+    const POLL_MS = 20000
+    const intervalId = window.setInterval(() => {
+      // Пауза, если вкладка свёрнута или идёт сохранение.
+      if (document.hidden || isSavingRef.current) return
+      void refreshData()
+    }, POLL_MS)
+    return () => window.clearInterval(intervalId)
+  }, [currentUser?.role, refreshData])
 
   // Кнопка «Обновить» — полная перезагрузка страницы (сессия сохранена в localStorage).
   function handleRefresh() {
@@ -340,6 +358,26 @@ function App() {
     }
   }
 
+  // Массовый отказ: одна причина применяется ко всем выбранным заявкам.
+  async function bulkRejectRequests(reason: string) {
+    if (!currentUser || selectedIds.length === 0) return
+    try {
+      setIsSaving(true)
+      setReviewError('')
+      for (const requestId of selectedIds) {
+        await rejectWriteOff(requestId, currentUser.id, reason)
+      }
+      clearSelection()
+      await refreshData()
+    } catch (error) {
+      setReviewError(
+        error instanceof Error ? error.message : 'Не удалось отклонить выбранные заявки.',
+      )
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   // Переключение вкладок проверяющего сбрасывает режим выбора.
   function handleReviewerWebView(view: WebView) {
     clearSelection()
@@ -460,6 +498,7 @@ function App() {
                   onLongPress={startSelection}
                   onToggleSelect={toggleSelection}
                   onBulkApprove={bulkApproveRequests}
+                  onBulkReject={bulkRejectRequests}
                   onClearSelection={clearSelection}
                 />
               ) : (

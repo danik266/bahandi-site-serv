@@ -9,12 +9,15 @@ export function HistoryView({
   searchTerm,
   lookups,
   onSearch,
+  onOpenRecord,
 }: {
   requests: WriteOffRequest[]
   title: string
   searchTerm: string
   lookups: Lookups
   onSearch: (value: string) => void
+  // Передаётся только проверяющим — делает записи кликабельными.
+  onOpenRecord?: (requestId: string) => void
 }) {
   return (
     <section className="workspace single-column">
@@ -31,7 +34,12 @@ export function HistoryView({
         </label>
         <div className="history-table">
           {requests.map((request) => (
-            <HistoryRow key={request.id} request={request} lookups={lookups} />
+            <HistoryRow
+              key={request.id}
+              request={request}
+              lookups={lookups}
+              onOpen={onOpenRecord ? () => onOpenRecord(request.id) : undefined}
+            />
           ))}
         </div>
       </div>

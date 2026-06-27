@@ -6,15 +6,18 @@ import type { Lookups, WriteOffRequest } from '../../types'
 export function HistoryRow({
   request,
   lookups,
+  onOpen,
 }: {
   request: WriteOffRequest
   lookups: Lookups
+  // Если передан — строка становится кликабельной (история проверяющего).
+  onOpen?: () => void
 }) {
   const product = lookups.product(request.productId)
   const outlet = lookups.outlet(request.outletId)
 
-  return (
-    <article className="history-row">
+  const content = (
+    <>
       <img src={request.photoUrl} alt="" />
       <div className="history-main">
         <strong>#{request.id} · {product.name}</strong>
@@ -40,6 +43,16 @@ export function HistoryRow({
           </>
         )}
       </div>
-    </article>
+    </>
   )
+
+  if (onOpen) {
+    return (
+      <button type="button" className="history-row history-row-button" onClick={onOpen}>
+        {content}
+      </button>
+    )
+  }
+
+  return <article className="history-row">{content}</article>
 }

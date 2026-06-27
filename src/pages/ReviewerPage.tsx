@@ -61,6 +61,7 @@ export function ReviewerPage({
   onLongPress,
   onToggleSelect,
   onBulkApprove,
+  onBulkReject,
   onClearSelection,
 }: {
   data: BootstrapPayload
@@ -86,6 +87,7 @@ export function ReviewerPage({
   onLongPress: (requestId: string) => void
   onToggleSelect: (requestId: string) => void
   onBulkApprove: () => void
+  onBulkReject: (reason: string) => void
   onClearSelection: () => void
 }) {
   const limitUsed = metrics.totalAmount
@@ -97,6 +99,33 @@ export function ReviewerPage({
   const [sheetId, setSheetId] = useState<string | null>(null) // открытая шторка отказа
   const [lastAction, setLastAction] = useState<LastAction | null>(null) // для Undo
   const timerRef = useRef<number | null>(null)
+
+  // --- НОВОЕ: шторка причины для массового отказа ---
+  const [bulkRejecting, setBulkRejecting] = useState(false)
+
+  function chooseBulkReason(reason: string) {
+    setBulkRejecting(false)
+    onBulkReject(reason)
+  }
+
+  // --- НОВОЕ: открытая запись истории + смена вердикта ---
+  const [historyOpenId, setHistoryOpenId] = useState<string | null>(null)
+  const [historyRejecting, setHistoryRejecting] = useState(false)
+  const openedRecord = data.requests.find((request) => request.id === historyOpenId)
+
+  function closeHistoryRecord() {
+    setHistoryOpenId(null)
+    setHistoryRejecting(false)
+  }
+
+  function verdictApprove() {
+    if (openedRecord) onApprove(openedRecord.id)
+  }
+
+  function verdictReject(reason: string) {
+    if (openedRecord) onReject(openedRecord.id, reason)
+    setHistoryRejecting(false)
+  }
 
   function clearTimer() {
     if (timerRef.current !== null) {
@@ -316,6 +345,7 @@ export function ReviewerPage({
           searchTerm={searchTerm}
           lookups={lookups}
           onSearch={onSearch}
+          onOpenRecord={setHistoryOpenId}
         />
       )}
 
@@ -323,9 +353,9 @@ export function ReviewerPage({
         <AnalyticsView data={data} metrics={metrics} lookups={lookups} />
       )}
 
-      {/* --- Плавающая нижняя панель массового апрува --- */}
+      {/* --- Плавающая нижняя панель массового апрува/отказа --- */}
       {selectedIds.length > 0 && (
-        <div className="bulk-bar" role="region" aria-label="Массовое одобрение">
+        <div className="bulk-bar" role="region" aria-label="Массовое решение">
           <div className="bulk-bar-inner">
             <button
               type="button"
@@ -337,16 +367,63 @@ export function ReviewerPage({
             </button>
             <button
               type="button"
+              className="button reject bulk-reject-btn"
+              disabled={isSaving}
+              onClick={() => setBulkRejecting(true)}
+            >
+              <X size={18} />
+              Отклонить ({selectedIds.length})
+            </button>
+            <button
+              type="button"
               className="button green bulk-approve-btn"
               disabled={isSaving}
               onClick={onBulkApprove}
             >
-              <Check size={20} />
-              Одобрить выбранные ({selectedIds.length})
+              <Check size={18} />
+              Одобрить ({selectedIds.length})
             </button>
           </div>
         </div>
       )}
+
+      {/* --- НОВОЕ: шторка причины для массового отказа --- */}
+      <AnimatePresence>
+        {bulkRejecting && (
+          <>
+            <motion.div
+              className="sheet-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setBulkRejecting(false)}
+            />
+            <motion.div
+              className="bottom-sheet"
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', stiffness: 340, damping: 34 }}
+            >
+              <div className="sheet-handle" />
+              <h3>Причина отказа для {selectedIds.length} заявок</h3>
+              <div className="reason-chips">
+                {REJECT_REASONS.map((reason) => (
+                  <button
+                    key={reason}
+                    type="button"
+                    className="reason-chip"
+                    disabled={isSaving}
+                    onClick={() => chooseBulkReason(reason)}
+                  >
+                    {reason}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* --- НОВОЕ: Undo-snackbar --- */}
       <AnimatePresence>
@@ -398,6 +475,110 @@ export function ReviewerPage({
                     {reason}
                   </button>
                 ))}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* --- НОВОЕ: модалка записи истории + смена вердикта --- */}
+      <AnimatePresence>
+        {openedRecord && (
+          <>
+            <motion.div
+              className="sheet-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={closeHistoryRecord}
+            />
+            <motion.div
+              className="detail-modal"
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', stiffness: 320, damping: 34 }}
+            >
+              <div className="detail-modal-head">
+                <strong>Заявка #{openedRecord.id}</strong>
+                <button
+                  type="button"
+                  className="modal-close"
+                  onClick={closeHistoryRecord}
+                  aria-label="Закрыть"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="detail-modal-body">
+                <RequestDetail
+                  request={openedRecord}
+                  auditEvents={data.auditEvents.filter(
+                    (event) => event.requestId === openedRecord.id,
+                  )}
+                  lookups={lookups}
+                />
+              </div>
+
+              <div className="verdict-bar">
+                {reviewError && (
+                  <div className="inline-alert">
+                    <AlertTriangle size={17} />
+                    {reviewError}
+                  </div>
+                )}
+
+                {historyRejecting ? (
+                  <div className="verdict-reasons">
+                    <span className="verdict-hint">Причина отказа</span>
+                    <div className="reason-chips">
+                      {REJECT_REASONS.map((reason) => (
+                        <button
+                          key={reason}
+                          type="button"
+                          className="reason-chip"
+                          disabled={isSaving}
+                          onClick={() => verdictReject(reason)}
+                        >
+                          {reason}
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      className="verdict-cancel"
+                      onClick={() => setHistoryRejecting(false)}
+                    >
+                      Назад
+                    </button>
+                  </div>
+                ) : (
+                  <div className="verdict-actions">
+                    {openedRecord.status !== 'rejected' && (
+                      <button
+                        type="button"
+                        className="button reject"
+                        disabled={isSaving}
+                        onClick={() => setHistoryRejecting(true)}
+                      >
+                        <X size={18} />
+                        Отклонить
+                      </button>
+                    )}
+                    {openedRecord.status !== 'approved' && (
+                      <button
+                        type="button"
+                        className="button green"
+                        disabled={isSaving}
+                        onClick={verdictApprove}
+                      >
+                        <Check size={18} />
+                        Одобрить
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             </motion.div>
           </>
