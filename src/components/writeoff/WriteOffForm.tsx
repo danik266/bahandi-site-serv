@@ -154,7 +154,6 @@ export function WriteOffForm({
             onClick={onAnalyze}
             disabled={isAnalyzing || !form.photoUrl}
           >
-            <Sparkles size={18} />
             {isAnalyzing ? 'Анализируем...' : 'Сгенерировать с ИИ'}
           </button>
           

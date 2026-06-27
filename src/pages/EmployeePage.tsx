@@ -97,7 +97,7 @@ export function EmployeePage({
             onAnalyze={onAnalyze}
           />
           <aside className="side-rail">
-            <SmartSidePanel form={form} lookups={lookups} />
+            {formMode === 'filling' && <SmartSidePanel form={form} lookups={lookups} />}
           </aside>
         </section>
       ) : (
