@@ -30,8 +30,8 @@ import './App.css'
 function App() {
   const navigate = useNavigate()
   const [currentUser, setCurrentUser] = useState<Employee | null>(null)
-  const [selectedLoginId, setSelectedLoginId] = useState('')
-  const [pinCode, setPinCode] = useState('')
+  const [login, setLogin] = useState('')
+  const [password, setPassword] = useState('')
   const [authError, setAuthError] = useState('')
   const [webView, setWebView] = useState<WebView>('create')
   const [data, setData] = useState<BootstrapPayload>(emptyData)
@@ -47,20 +47,21 @@ function App() {
 
   const lookups = useMemo(() => createLookups(data), [data])
 
-  const refreshData = useCallback(async () => {
+  const refreshData = useCallback(async (userOverride?: Employee | null) => {
     try {
       setApiError('')
-      const payload = await loadBootstrap()
+      const activeUser = userOverride === undefined ? currentUser : userOverride
+      const payload = await loadBootstrap(activeUser?.id)
       setData(payload)
-      setSelectedLoginId(
-        (current) =>
-          current || payload.employees.find((employee) => employee.role === 'sender')?.id || '',
+      setSelectedRequestId((current) =>
+        payload.requests.some((request) => request.id === current)
+          ? current
+          : payload.requests[0]?.id || '',
       )
-      setSelectedRequestId((current) => current || payload.requests[0]?.id || '')
       setForm((current) =>
         current.outletId
           ? current
-          : createDefaultForm(payload, currentUser ?? payload.employees[0]),
+          : createDefaultForm(payload, activeUser ?? payload.employees[0]),
       )
     } catch (error) {
       setApiError(error instanceof Error ? error.message : 'Не удалось загрузить данные')
@@ -129,11 +130,14 @@ function App() {
     try {
       setIsSaving(true)
       setAuthError('')
-      const result = await loginUser(selectedLoginId, pinCode)
+      const result = await loginUser(login, password)
+      const payload = await loadBootstrap(result.user.id)
       setCurrentUser(result.user)
+      setData(payload)
       setWebView(result.user.role === 'sender' ? 'create' : 'review')
-      setForm(createDefaultForm(data, result.user))
-      setPinCode('')
+      setForm(createDefaultForm(payload, result.user))
+      setSelectedRequestId(payload.requests[0]?.id || '')
+      setPassword('')
       navigate(result.user.role === 'sender' ? '/employee' : '/reviewer')
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : 'Не удалось войти')
@@ -144,8 +148,10 @@ function App() {
 
   function handleLogout() {
     setCurrentUser(null)
-    setPinCode('')
+    setPassword('')
     setAuthError('')
+    setData(emptyData)
+    setForm(createEmptyForm())
     setWebView('create')
     navigate('/login')
   }
@@ -287,7 +293,12 @@ function App() {
 
         {currentUser ? (
           <div className="header-actions">
-            <button type="button" className="header-refresh" onClick={refreshData} disabled={isSaving}>
+            <button
+              type="button"
+              className="header-refresh"
+              onClick={() => void refreshData()}
+              disabled={isSaving}
+            >
               <RefreshCw size={17} />
               Обновить
             </button>
@@ -320,14 +331,13 @@ function App() {
                 <Navigate to={homePath} replace />
               ) : (
                 <LoginPage
-                  employees={data.employees}
-                  selectedLoginId={selectedLoginId}
-                  pinCode={pinCode}
+                  login={login}
+                  password={password}
                   authError={authError}
                   isSaving={isSaving}
                   onLogin={handleLogin}
-                  onSelect={setSelectedLoginId}
-                  onPinChange={setPinCode}
+                  onLoginChange={setLogin}
+                  onPasswordChange={setPassword}
                 />
               )
             }

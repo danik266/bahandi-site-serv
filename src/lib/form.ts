@@ -1,7 +1,8 @@
 import type { BootstrapPayload, Employee, FormState } from '../types'
 
 export function createDefaultForm(data: BootstrapPayload, user?: Employee): FormState {
-  const outlet = data.outlets.find((item) => item.id === user?.outletId) ?? data.outlets[0]
+  const preferredOutletId = user?.outletIds?.[0] ?? user?.outletId
+  const outlet = data.outlets.find((item) => item.id === preferredOutletId) ?? data.outlets[0]
   return {
     outletId: outlet?.id ?? '',
     productId: data.products[0]?.id ?? '',

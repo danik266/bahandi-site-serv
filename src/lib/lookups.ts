@@ -27,7 +27,10 @@ export const fallbackEmployee: Employee = {
   id: 'user-fallback',
   name: 'Пользователь',
   role: 'sender',
+  login: 'user',
   outletId: 'outlet-fallback',
+  outletIds: ['outlet-fallback'],
+  accessScope: 'assigned',
   iikoEmployeeId: 'emp_demo',
 }
 

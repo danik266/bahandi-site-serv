@@ -1,59 +1,58 @@
 import type { FormEvent } from 'react'
-import { AlertTriangle, LoaderCircle, UserCheck, UserRound } from 'lucide-react'
+import { AlertTriangle, LoaderCircle, LockKeyhole, UserCheck, UserRound } from 'lucide-react'
 import { PanelTitle } from '../components/ui'
-import type { Employee } from '../types'
 
 export function LoginPage({
-  employees,
-  selectedLoginId,
-  pinCode,
+  login,
+  password,
   authError,
   isSaving,
   onLogin,
-  onSelect,
-  onPinChange,
+  onLoginChange,
+  onPasswordChange,
 }: {
-  employees: Employee[]
-  selectedLoginId: string
-  pinCode: string
+  login: string
+  password: string
   authError: string
   isSaving: boolean
   onLogin: (event: FormEvent<HTMLFormElement>) => void
-  onSelect: (id: string) => void
-  onPinChange: (value: string) => void
+  onLoginChange: (value: string) => void
+  onPasswordChange: (value: string) => void
 }) {
   return (
     <main className="login-shell">
       <form className="panel login-panel" onSubmit={onLogin}>
-        <PanelTitle icon={UserRound} title="Авторизация" detail="role access" />
+        <PanelTitle icon={UserRound} title="Авторизация" detail="login access" />
         <p className="login-copy">
-          Войдите сотрудником торговой точки или проверяющим. Сотрудник создает
-          заявки, проверяющий подтверждает списание и отправляет акт в Iiko.
+          Войдите личным логином. Сотрудник увидит только свои торговые точки,
+          проверяющий - закрепленные точки, главный проверяющий - всю сеть.
         </p>
 
-        <div className="login-users">
-          {employees.map((employee) => (
-            <button
-              key={employee.id}
-              type="button"
-              className={selectedLoginId === employee.id ? 'login-user active' : 'login-user'}
-              onClick={() => onSelect(employee.id)}
-            >
-              <strong>{employee.name}</strong>
-              <span>{employee.role === 'sender' ? 'Сотрудник' : 'Проверяющий'}</span>
-            </button>
-          ))}
-        </div>
-
         <label>
-          <span>PIN</span>
+          <span>Логин</span>
           <input
-            value={pinCode}
-            inputMode="numeric"
-            placeholder="1111 для сотрудника, 9999 для проверяющего"
-            onChange={(event) => onPinChange(event.target.value)}
+            value={login}
+            autoComplete="username"
+            placeholder="aibek"
+            onChange={(event) => onLoginChange(event.target.value)}
           />
         </label>
+
+        <label>
+          <span>Пароль</span>
+          <input
+            value={password}
+            type="password"
+            autoComplete="current-password"
+            placeholder="demo123"
+            onChange={(event) => onPasswordChange(event.target.value)}
+          />
+        </label>
+
+        <div className="login-demo">
+          <LockKeyhole size={16} />
+          <span>aibek/demo123, aigerim/review123, manager/manager123</span>
+        </div>
 
         {authError && (
           <div className="inline-alert">
