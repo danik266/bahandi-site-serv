@@ -46,6 +46,11 @@ export function EmployeePage({
   onDemoPhoto: () => void
   onSearch: (value: string) => void
 }) {
+  const accessLabel =
+    currentUser.accessScope === 'all'
+      ? 'Все точки'
+      : data.outlets.map((outlet) => outlet.name.replace('Bahandi ', '')).join(', ')
+
   return (
     <main className="web-dashboard">
       <nav className="web-tabs two">
@@ -86,8 +91,8 @@ export function EmployeePage({
               icon={Store}
               title="Текущий доступ"
               rows={[
-                ['role', 'sender'],
-                ['outlet', lookups.outlet(currentUser.outletId).name],
+                ['role', currentUser.role],
+                ['outlets', accessLabel || lookups.outlet(currentUser.outletId).name],
                 ['employeeId', currentUser.iikoEmployeeId],
                 ['requests', String(myRequests.length)],
               ]}

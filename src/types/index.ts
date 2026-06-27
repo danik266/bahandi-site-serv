@@ -25,7 +25,10 @@ export type Employee = {
   id: string
   name: string
   role: Role
+  login: string
   outletId: string
+  outletIds: string[]
+  accessScope: 'assigned' | 'all'
   iikoEmployeeId: string
 }
 

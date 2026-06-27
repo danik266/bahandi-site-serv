@@ -4,13 +4,19 @@ const configuredApiBase =
 export const API_BASE = configuredApiBase.replace(/\/+$/, '')
 
 export async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, {
+  const fetchOptions: RequestInit = {
+    method: init?.method ?? 'GET',
     headers: {
       'Content-Type': 'application/json',
       ...init?.headers,
     },
-    ...init,
-  })
+  }
+
+  if (init?.body !== undefined) {
+    fetchOptions.body = init.body
+  }
+
+  const response = await fetch(`${API_BASE}${path}`, fetchOptions)
 
   if (!response.ok) {
     const payload = (await response.json().catch(() => null)) as { error?: string } | null

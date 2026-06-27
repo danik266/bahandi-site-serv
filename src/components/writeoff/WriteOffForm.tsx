@@ -36,13 +36,17 @@ export function WriteOffForm({
   onDemoPhoto: () => void
 }) {
   const selectedProduct = lookups.product(form.productId)
+  const accessDetail =
+    data.outlets.length === 1
+      ? lookups.outlet(currentUser.outletId).name
+      : `${data.outlets.length} доступные точки`
 
   return (
     <form className="panel writeoff-form" onSubmit={onSubmit}>
       <PanelTitle
         icon={Camera}
         title="Новая заявка на списание"
-        detail={`${currentUser.name} · ${lookups.outlet(currentUser.outletId).name}`}
+        detail={`${currentUser.name} · ${accessDetail}`}
       />
 
       <div className="photo-uploader">

@@ -1,25 +1,27 @@
 .app-shell {
-  --green: #007434;
-  --green-dark: #004b24;
-  --orange: #ff5a1f;
+  --green: var(--color-green);
+  --green-dark: #075928;
+  --orange: var(--color-orange);
   --orange-soft: #fff0e8;
-  --black: #24211f;
-  --ink: #1d232b;
-  --muted: #6f7885;
-  --surface: #ffffff;
-  --surface-soft: #f6f6f4;
-  --line: #e4e4df;
-  --line-strong: #cfcfc7;
+  --black: var(--color-text-dark);
+  --ink: var(--color-text);
+  --muted: var(--color-muted);
+  --surface: var(--color-bg);
+  --surface-soft: var(--color-bg-soft);
+  --line: var(--color-border);
+  --line-strong: var(--color-light-gray);
   --red: #c83c31;
   --red-soft: #fff0ee;
   --green-soft: #e8f6ed;
-  --shadow: 0 18px 55px rgba(32, 28, 24, 0.1);
+  --shadow: var(--shadow-card);
 
   width: min(1180px, 100%);
   min-height: 100svh;
   margin: 0 auto;
   padding: 18px;
   color: var(--ink);
+  font-family: var(--font-main);
+  font-size: 17.6px;
 }
 
 .brand-header {
@@ -30,9 +32,9 @@
   min-height: 82px;
   padding: 12px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius-card);
   background: var(--surface);
-  box-shadow: 0 10px 34px rgba(32, 28, 24, 0.07);
+  box-shadow: var(--shadow);
 }
 
 .brand-left {
@@ -57,14 +59,14 @@
 
 .brand-left strong {
   color: var(--black);
-  font-size: 1.08rem;
-  font-weight: 900;
+  font-size: 19.2px;
+  font-weight: 700;
 }
 
 .brand-left span {
   color: var(--muted);
-  font-size: 0.82rem;
-  font-weight: 800;
+  font-size: 14.4px;
+  font-weight: 600;
 }
 
 .bahandi-logo {
@@ -134,7 +136,7 @@
   min-width: 280px;
   padding: 4px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius-button);
   background: var(--surface-soft);
 }
 
@@ -147,10 +149,10 @@
   gap: 8px;
   min-height: 42px;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--radius-input);
   color: var(--muted);
   background: transparent;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .client-switch button.active,
@@ -169,10 +171,10 @@
   min-height: 44px;
   padding: 0 16px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-button);
   color: #ffffff;
   background: var(--green);
-  font-weight: 950;
+  font-weight: 700;
 }
 
 .header-refresh:disabled {
@@ -194,10 +196,10 @@
   min-height: 44px;
   padding: 0 16px;
   border: 1px solid var(--line-strong);
-  border-radius: 8px;
+  border-radius: var(--radius-button);
   color: var(--black);
   background: var(--surface);
-  font-weight: 950;
+  font-weight: 700;
 }
 
 .site-alert {
@@ -217,7 +219,17 @@
 .login-copy {
   margin: 0 0 16px;
   color: var(--muted);
-  font-weight: 750;
+  font-weight: 500;
+}
+
+.login-demo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 0 4px;
+  color: var(--muted);
+  font-size: 14.4px;
+  font-weight: 500;
 }
 
 .login-users {
@@ -242,7 +254,7 @@
 .login-user.active {
   border-color: var(--green);
   background: var(--green-soft);
-  box-shadow: 0 0 0 3px rgba(0, 116, 52, 0.1);
+  box-shadow: 0 0 0 3px rgba(13, 128, 61, 0.1);
 }
 
 .login-user strong,
@@ -255,7 +267,7 @@
 .login-user span {
   color: var(--muted);
   font-size: 0.82rem;
-  font-weight: 850;
+  font-weight: 600;
 }
 
 .connection-bar {
@@ -295,7 +307,7 @@
 .connection-bar span {
   color: var(--muted);
   font-size: 0.82rem;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .connection-bar button {
@@ -307,7 +319,7 @@
   border-radius: 7px;
   color: #ffffff;
   background: var(--green);
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .loading-panel {
@@ -320,7 +332,7 @@
   border-radius: 8px;
   background: var(--surface);
   color: var(--black);
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .loading-panel svg,
@@ -393,7 +405,7 @@
 .mobile-user-card span {
   opacity: 0.78;
   font-size: 0.76rem;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .mobile-user-card strong {
@@ -478,7 +490,7 @@
   gap: 8px;
   place-items: center;
   color: var(--muted);
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .photo-actions {
@@ -516,7 +528,7 @@ label {
 label > span {
   color: var(--muted);
   font-size: 0.8rem;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 input,
@@ -547,7 +559,7 @@ input:focus,
 select:focus,
 textarea:focus {
   border-color: var(--orange);
-  box-shadow: 0 0 0 3px rgba(255, 90, 31, 0.14);
+  box-shadow: 0 0 0 3px rgba(255, 94, 18, 0.14);
 }
 
 input[readonly] {
@@ -581,7 +593,7 @@ input[readonly] {
   border-radius: 7px;
   color: var(--muted);
   background: transparent;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .segmented button.active {
@@ -598,7 +610,7 @@ input[readonly] {
   padding: 0 14px;
   border: 1px solid transparent;
   border-radius: 8px;
-  font-weight: 950;
+  font-weight: 700;
   text-decoration: none;
 }
 
@@ -646,7 +658,7 @@ input[readonly] {
   color: #85310d;
   background: var(--orange-soft);
   font-size: 0.88rem;
-  font-weight: 850;
+  font-weight: 600;
 }
 
 .mobile-request-card {
@@ -683,7 +695,7 @@ input[readonly] {
 .mobile-request-card span {
   color: var(--muted);
   font-size: 0.78rem;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .mobile-copy {
@@ -699,7 +711,7 @@ input[readonly] {
   color: #ffffff;
   background: var(--orange);
   font-size: 0.78rem;
-  font-weight: 950;
+  font-weight: 700;
   text-transform: uppercase;
 }
 
@@ -716,7 +728,7 @@ input[readonly] {
   margin: 0;
   color: var(--muted);
   font-size: 1.08rem;
-  font-weight: 750;
+  font-weight: 500;
 }
 
 .web-dashboard {
@@ -763,7 +775,7 @@ input[readonly] {
   overflow-wrap: anywhere;
   color: var(--muted);
   font-size: 0.78rem;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .metric strong {
@@ -837,7 +849,7 @@ input[readonly] {
   flex: 0 0 auto;
   color: var(--muted);
   font-size: 0.78rem;
-  font-weight: 950;
+  font-weight: 700;
   text-transform: uppercase;
 }
 
@@ -862,7 +874,7 @@ input[readonly] {
 
 .request-card.active {
   border-color: var(--orange);
-  box-shadow: 0 0 0 3px rgba(255, 90, 31, 0.12);
+  box-shadow: 0 0 0 3px rgba(255, 94, 18, 0.12);
 }
 
 .request-card img {
@@ -901,7 +913,7 @@ input[readonly] {
 .request-card span,
 .request-card small {
   color: var(--muted);
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .request-card span {
@@ -946,7 +958,7 @@ input[readonly] {
 .eyebrow {
   color: var(--muted);
   font-size: 0.78rem;
-  font-weight: 950;
+  font-weight: 700;
   text-transform: uppercase;
 }
 
@@ -967,7 +979,7 @@ input[readonly] {
   padding: 0 10px;
   border-radius: 999px;
   font-size: 0.78rem;
-  font-weight: 950;
+  font-weight: 700;
   white-space: nowrap;
 }
 
@@ -1007,7 +1019,7 @@ input[readonly] {
 .fact span {
   color: var(--muted);
   font-size: 0.76rem;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .fact strong {
@@ -1026,7 +1038,7 @@ input[readonly] {
   gap: 9px;
   padding: 12px;
   border-radius: 8px;
-  font-weight: 850;
+  font-weight: 600;
 }
 
 .deduction-banner {
@@ -1080,7 +1092,7 @@ input[readonly] {
 .info-row span {
   color: var(--muted);
   font-size: 0.78rem;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 code {
@@ -1118,7 +1130,7 @@ code {
 .audit-feed small {
   color: var(--muted);
   font-size: 0.76rem;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .audit-feed strong {
@@ -1205,7 +1217,7 @@ code {
 .history-doc {
   color: var(--muted);
   font-size: 0.78rem;
-  font-weight: 850;
+  font-weight: 600;
 }
 
 .history-meta {
@@ -1245,7 +1257,7 @@ code {
   gap: 12px;
   color: var(--black);
   font-size: 0.88rem;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .bar-row strong {
@@ -1281,7 +1293,7 @@ code {
   min-height: 48px;
   padding: 10px;
   border-radius: 8px;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .risk-item.ok {
