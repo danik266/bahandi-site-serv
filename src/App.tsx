@@ -29,7 +29,15 @@ import './App.css'
 
 function App() {
   const navigate = useNavigate()
-  const [currentUser, setCurrentUser] = useState<Employee | null>(null)
+  // Восстанавливаем сессию из localStorage, чтобы перезагрузка страницы не разлогинивала.
+  const [currentUser, setCurrentUser] = useState<Employee | null>(() => {
+    try {
+      const raw = localStorage.getItem('bahandi_user')
+      return raw ? (JSON.parse(raw) as Employee) : null
+    } catch {
+      return null
+    }
+  })
   const [login, setLogin] = useState('')
   const [password, setPassword] = useState('')
   const [authError, setAuthError] = useState('')
@@ -76,6 +84,11 @@ function App() {
   useEffect(() => {
     void refreshData()
   }, [refreshData])
+
+  // Кнопка «Обновить» — полная перезагрузка страницы (сессия сохранена в localStorage).
+  function handleRefresh() {
+    window.location.reload()
+  }
 
   const pendingRequests = useMemo(
     () =>
@@ -136,6 +149,8 @@ function App() {
       const result = await loginUser(login, password)
       const payload = await loadBootstrap(result.user.id)
       setCurrentUser(result.user)
+      // Сохраняем сессию, чтобы пережить перезагрузку страницы.
+      localStorage.setItem('bahandi_user', JSON.stringify(result.user))
       setData(payload)
       setWebView(result.user.role === 'sender' ? 'create' : 'review')
       setForm(createDefaultForm(payload, result.user))
@@ -151,6 +166,7 @@ function App() {
 
   function handleLogout() {
     setCurrentUser(null)
+    localStorage.removeItem('bahandi_user')
     setPassword('')
     setAuthError('')
     setData(emptyData)
@@ -261,9 +277,10 @@ function App() {
     }
   }
 
-  async function rejectRequest(requestId: string) {
+  async function rejectRequest(requestId: string, reasonOverride?: string) {
     if (!currentUser) return
-    const reason = rejectionDraft.trim()
+    // reasonOverride приходит из быстрых причин (свайп влево), иначе берём из textarea.
+    const reason = (reasonOverride ?? rejectionDraft).trim()
     if (reason.length < 8) {
       setReviewError('Укажите причину отклонения.')
       return
@@ -344,12 +361,7 @@ function App() {
 
         {currentUser ? (
           <div className="header-actions">
-            <button
-              type="button"
-              className="header-refresh"
-              onClick={() => void refreshData()}
-              disabled={isSaving}
-            >
+            <button type="button" className="header-refresh" onClick={handleRefresh}>
               <RefreshCw size={17} />
               Обновить
             </button>

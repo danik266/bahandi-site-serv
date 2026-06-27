@@ -1,5 +1,5 @@
 import type { FormEvent } from 'react'
-import { AlertTriangle, LoaderCircle, LockKeyhole, UserCheck, UserRound } from 'lucide-react'
+import { AlertTriangle, LoaderCircle, UserCheck, UserRound } from 'lucide-react'
 import { PanelTitle } from '../components/ui'
 
 export function LoginPage({
@@ -22,10 +22,10 @@ export function LoginPage({
   return (
     <main className="login-shell">
       <form className="panel login-panel" onSubmit={onLogin}>
-        <PanelTitle icon={UserRound} title="Авторизация" detail="login access" />
+        <PanelTitle icon={UserRound} title="Авторизация" detail="role access" />
         <p className="login-copy">
-          Войдите личным логином. Сотрудник увидит только свои торговые точки,
-          проверяющий - закрепленные точки, главный проверяющий - всю сеть.
+          Войдите сотрудником торговой точки или проверяющим. Сотрудник создает
+          заявки, проверяющий подтверждает списание и отправляет акт в Iiko.
         </p>
 
         <label>
@@ -33,7 +33,7 @@ export function LoginPage({
           <input
             value={login}
             autoComplete="username"
-            placeholder="aibek"
+            placeholder="Например: reviewer"
             onChange={(event) => onLoginChange(event.target.value)}
           />
         </label>
@@ -44,15 +44,10 @@ export function LoginPage({
             value={password}
             type="password"
             autoComplete="current-password"
-            placeholder="demo123"
+            placeholder="Пароль сотрудника"
             onChange={(event) => onPasswordChange(event.target.value)}
           />
         </label>
-
-        <div className="login-demo">
-          <LockKeyhole size={16} />
-          <span>aibek/demo123, aigerim/review123, manager/manager123</span>
-        </div>
 
         {authError && (
           <div className="inline-alert">

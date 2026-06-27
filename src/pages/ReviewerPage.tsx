@@ -1,3 +1,5 @@
+import { useEffect, useRef, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import {
   AlertTriangle,
   BadgeCheck,
@@ -9,14 +11,15 @@ import {
   Clock3,
   Database,
   History,
+  RotateCcw,
   X,
 } from 'lucide-react'
 import { Metric, PanelTitle } from '../components/ui'
 import {
   AnalyticsView,
   HistoryView,
-  RequestCard,
   RequestDetail,
+  SwipeableRequestCard,
 } from '../components/writeoff'
 import { moneyFormatter } from '../lib/format'
 import { DAILY_WRITEOFF_LIMIT } from '../lib/constants'
@@ -27,6 +30,12 @@ import type {
   WebView,
   WriteOffRequest,
 } from '../types'
+
+// --- НОВОЕ: быстрые причины отказа для Bottom Sheet ---
+const REJECT_REASONS = ['Некачественное фото', 'Недостаточно оснований', 'Обсудим лично']
+const UNDO_MS = 5000
+
+type LastAction = { id: string; type: 'approve' | 'reject'; reason?: string }
 
 export function ReviewerPage({
   data,
@@ -47,7 +56,6 @@ export function ReviewerPage({
   onApprove,
   onReject,
   onRejectionDraft,
-  // --- НОВОЕ: режим массового апрува ---
   selectionMode,
   selectedIds,
   onLongPress,
@@ -71,7 +79,7 @@ export function ReviewerPage({
   onSelect: (requestId: string) => void
   onSearch: (value: string) => void
   onApprove: (requestId: string) => void
-  onReject: (requestId: string) => void
+  onReject: (requestId: string, reason?: string) => void
   onRejectionDraft: (value: string) => void
   selectionMode: boolean
   selectedIds: string[]
@@ -80,10 +88,74 @@ export function ReviewerPage({
   onBulkApprove: () => void
   onClearSelection: () => void
 }) {
-  // --- НОВОЕ: данные для мини-дашборда лимита ---
   const limitUsed = metrics.totalAmount
   const limitPercent = Math.min(100, Math.round((limitUsed / DAILY_WRITEOFF_LIMIT) * 100))
   const limitOver = limitUsed > DAILY_WRITEOFF_LIMIT
+
+  // --- НОВОЕ: локальные стейты свайпов (не трогают структуру списка) ---
+  const [hiddenIds, setHiddenIds] = useState<string[]>([]) // оптимистично скрытые карточки
+  const [sheetId, setSheetId] = useState<string | null>(null) // открытая шторка отказа
+  const [lastAction, setLastAction] = useState<LastAction | null>(null) // для Undo
+  const timerRef = useRef<number | null>(null)
+
+  function clearTimer() {
+    if (timerRef.current !== null) {
+      window.clearTimeout(timerRef.current)
+      timerRef.current = null
+    }
+  }
+
+  useEffect(() => clearTimer, [])
+
+  // Финализируем действие на сервере через 5 секунд, если не нажали «Отменить».
+  function scheduleFinalize(action: LastAction) {
+    clearTimer()
+    setLastAction(action)
+    timerRef.current = window.setTimeout(() => {
+      if (action.type === 'approve') onApprove(action.id)
+      else onReject(action.id, action.reason)
+      setLastAction(null)
+      setHiddenIds((prev) => prev.filter((id) => id !== action.id))
+      timerRef.current = null
+    }, UNDO_MS)
+  }
+
+  function handleSwipeApprove(id: string) {
+    if (navigator.vibrate) navigator.vibrate(50)
+    setHiddenIds((prev) => [...prev, id])
+    scheduleFinalize({ id, type: 'approve' })
+  }
+
+  function handleSwipeReject(id: string) {
+    if (navigator.vibrate) navigator.vibrate([100, 50, 100])
+    setHiddenIds((prev) => [...prev, id])
+    setSheetId(id) // ждём выбор причины в шторке
+  }
+
+  function chooseReason(reason: string) {
+    if (!sheetId) return
+    const id = sheetId
+    setSheetId(null)
+    scheduleFinalize({ id, type: 'reject', reason })
+  }
+
+  // Закрытие шторки без выбора — карточка возвращается в список.
+  function dismissSheet() {
+    if (!sheetId) return
+    const id = sheetId
+    setSheetId(null)
+    setHiddenIds((prev) => prev.filter((item) => item !== id))
+  }
+
+  function undoLast() {
+    clearTimer()
+    if (lastAction) {
+      setHiddenIds((prev) => prev.filter((id) => id !== lastAction.id))
+      setLastAction(null)
+    }
+  }
+
+  const visiblePending = pendingRequests.filter((request) => !hiddenIds.includes(request.id))
 
   return (
     <main className={`web-dashboard${selectedIds.length > 0 ? ' has-bulk-bar' : ''}`}>
@@ -136,7 +208,6 @@ export function ReviewerPage({
           <div className="panel queue-panel">
             <PanelTitle icon={ClipboardCheck} title="Очередь проверки" detail="pending" />
 
-            {/* --- НОВОЕ: компактный мини-дашборд лимита --- */}
             <div className={`limit-meter${limitOver ? ' over' : ''}`}>
               <div className="limit-meter-head">
                 <span>Лимит списаний на сегодня</span>
@@ -150,20 +221,32 @@ export function ReviewerPage({
             </div>
 
             <div className="request-list">
-              {pendingRequests.map((request) => (
-                <RequestCard
-                  key={request.id}
-                  request={request}
-                  active={selectedRequestId === request.id}
-                  lookups={lookups}
-                  onClick={() => onSelect(request.id)}
-                  selectionMode={selectionMode}
-                  selected={selectedIds.includes(request.id)}
-                  onLongPress={() => onLongPress(request.id)}
-                  onToggleSelect={() => onToggleSelect(request.id)}
-                />
-              ))}
-              {pendingRequests.length === 0 && (
+              <AnimatePresence initial={false}>
+                {visiblePending.map((request) => (
+                  <motion.div
+                    key={request.id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.96 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 40 }}
+                  >
+                    <SwipeableRequestCard
+                      request={request}
+                      active={selectedRequestId === request.id}
+                      lookups={lookups}
+                      onClick={() => onSelect(request.id)}
+                      selectionMode={selectionMode}
+                      selected={selectedIds.includes(request.id)}
+                      onLongPress={() => onLongPress(request.id)}
+                      onToggleSelect={() => onToggleSelect(request.id)}
+                      onSwipeApprove={() => handleSwipeApprove(request.id)}
+                      onSwipeReject={() => handleSwipeReject(request.id)}
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+              {visiblePending.length === 0 && (
                 <div className="empty-state">
                   <BadgeCheck size={34} />
                   <strong>Очередь пуста</strong>
@@ -240,7 +323,7 @@ export function ReviewerPage({
         <AnalyticsView data={data} metrics={metrics} lookups={lookups} />
       )}
 
-      {/* --- НОВОЕ: плавающая нижняя панель массового апрува --- */}
+      {/* --- Плавающая нижняя панель массового апрува --- */}
       {selectedIds.length > 0 && (
         <div className="bulk-bar" role="region" aria-label="Массовое одобрение">
           <div className="bulk-bar-inner">
@@ -264,6 +347,62 @@ export function ReviewerPage({
           </div>
         </div>
       )}
+
+      {/* --- НОВОЕ: Undo-snackbar --- */}
+      <AnimatePresence>
+        {lastAction && (
+          <motion.div
+            className="undo-snackbar"
+            initial={{ y: 90, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 90, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+          >
+            <span>{lastAction.type === 'approve' ? 'Заявка одобрена' : 'Заявка отклонена'}</span>
+            <button type="button" className="undo-btn" onClick={undoLast}>
+              <RotateCcw size={17} />
+              Отменить
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* --- НОВОЕ: Bottom Sheet быстрых причин отказа --- */}
+      <AnimatePresence>
+        {sheetId && (
+          <>
+            <motion.div
+              className="sheet-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={dismissSheet}
+            />
+            <motion.div
+              className="bottom-sheet"
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', stiffness: 340, damping: 34 }}
+            >
+              <div className="sheet-handle" />
+              <h3>Причина отказа</h3>
+              <div className="reason-chips">
+                {REJECT_REASONS.map((reason) => (
+                  <button
+                    key={reason}
+                    type="button"
+                    className="reason-chip"
+                    onClick={() => chooseReason(reason)}
+                  >
+                    {reason}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </main>
   )
 }
