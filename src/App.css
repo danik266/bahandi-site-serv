@@ -2333,3 +2333,59 @@ code {
   background: transparent;
   font-weight: 700;
 }
+
+/* ============================================================= */
+/* Бейдж на вкладке + сортировка очереди + комментарий одобрения */
+/* ============================================================= */
+
+/* Счётчик ожидающих на вкладке «Проверка». */
+.tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  color: #ffffff;
+  background: var(--orange);
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+/* Панель сортировки очереди. */
+.queue-sort {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.queue-sort-label {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.queue-sort button {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  background: var(--surface-soft);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.queue-sort button.active {
+  color: #ffffff;
+  border-color: var(--green);
+  background: var(--green);
+}
+
+.queue-sort button:active {
+  transform: scale(0.98);
+}

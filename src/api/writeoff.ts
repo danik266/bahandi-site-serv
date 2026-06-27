@@ -8,10 +8,14 @@ export async function createWriteOff(payload: CreateRequestPayload) {
   })
 }
 
-export async function approveWriteOff(requestId: string, reviewedById: string) {
+export async function approveWriteOff(
+  requestId: string,
+  reviewedById: string,
+  comment?: string,
+) {
   return requestJson<{ request: WriteOffRequest }>(`/requests/${requestId}/approve`, {
     method: 'PATCH',
-    body: JSON.stringify({ reviewedById }),
+    body: JSON.stringify(comment ? { reviewedById, comment } : { reviewedById }),
   })
 }
 

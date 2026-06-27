@@ -65,6 +65,7 @@ function App() {
   // Reviewer State
   const [searchTerm, setSearchTerm] = useState('')
   const [rejectionDraft, setRejectionDraft] = useState('')
+  const [approvalDraft, setApprovalDraft] = useState('')
   const [reviewError, setReviewError] = useState('')
   const [selectedRequestId, setSelectedRequestId] = useState('')
   // --- НОВОЕ: режим массового апрува (Zen Mode) ---
@@ -369,13 +370,15 @@ function App() {
     }
   }
 
-  async function approveRequest(requestId: string) {
+  async function approveRequest(requestId: string, comment?: string) {
     if (!currentUser) return
     try {
       setIsSaving(true)
       setReviewError('')
-      const result = await approveWriteOff(requestId, currentUser.id)
+      const trimmed = comment?.trim()
+      const result = await approveWriteOff(requestId, currentUser.id, trimmed || undefined)
       setSelectedRequestId(result.request.id)
+      setApprovalDraft('')
       await refreshData()
     } catch (error) {
       setReviewError(error instanceof Error ? error.message : 'Не удалось подтвердить заявку.')
@@ -597,6 +600,7 @@ function App() {
                   searchTerm={searchTerm}
                   reviewError={reviewError}
                   rejectionDraft={rejectionDraft}
+                  approvalDraft={approvalDraft}
                   isSaving={isSaving}
                   onWebViewChange={handleReviewerWebView}
                   onSelect={setSelectedRequestId}
@@ -604,6 +608,7 @@ function App() {
                   onApprove={approveRequest}
                   onReject={rejectRequest}
                   onRejectionDraft={setRejectionDraft}
+                  onApprovalDraft={setApprovalDraft}
                   selectionMode={selectionMode}
                   selectedIds={selectedIds}
                   onLongPress={startSelection}

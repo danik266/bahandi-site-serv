@@ -23,6 +23,8 @@ import {
 } from '../components/writeoff'
 import { moneyFormatter } from '../lib/format'
 import { DAILY_WRITEOFF_LIMIT } from '../lib/constants'
+import { getRequestCost } from '../lib/request'
+import { getFraudScore } from '../lib/scoring'
 import type {
   BootstrapPayload,
   Lookups,
@@ -37,6 +39,14 @@ const UNDO_MS = 5000
 
 type LastAction = { id: string; type: 'approve' | 'reject'; reason?: string }
 
+// --- НОВОЕ: варианты сортировки очереди ---
+type SortBy = 'time' | 'sum' | 'risk'
+const SORT_OPTIONS: Array<{ key: SortBy; label: string }> = [
+  { key: 'time', label: 'Время' },
+  { key: 'sum', label: 'Сумма' },
+  { key: 'risk', label: 'Риск' },
+]
+
 export function ReviewerPage({
   data,
   metrics,
@@ -49,6 +59,7 @@ export function ReviewerPage({
   searchTerm,
   reviewError,
   rejectionDraft,
+  approvalDraft,
   isSaving,
   onWebViewChange,
   onSelect,
@@ -56,6 +67,7 @@ export function ReviewerPage({
   onApprove,
   onReject,
   onRejectionDraft,
+  onApprovalDraft,
   selectionMode,
   selectedIds,
   onLongPress,
@@ -75,13 +87,15 @@ export function ReviewerPage({
   searchTerm: string
   reviewError: string
   rejectionDraft: string
+  approvalDraft: string
   isSaving: boolean
   onWebViewChange: (view: WebView) => void
   onSelect: (requestId: string) => void
   onSearch: (value: string) => void
-  onApprove: (requestId: string) => void
+  onApprove: (requestId: string, comment?: string) => void
   onReject: (requestId: string, reason?: string) => void
   onRejectionDraft: (value: string) => void
+  onApprovalDraft: (value: string) => void
   selectionMode: boolean
   selectedIds: string[]
   onLongPress: (requestId: string) => void
@@ -99,6 +113,9 @@ export function ReviewerPage({
   const [sheetId, setSheetId] = useState<string | null>(null) // открытая шторка отказа
   const [lastAction, setLastAction] = useState<LastAction | null>(null) // для Undo
   const timerRef = useRef<number | null>(null)
+
+  // --- НОВОЕ: сортировка очереди ---
+  const [sortBy, setSortBy] = useState<SortBy>('time')
 
   // --- НОВОЕ: шторка причины для массового отказа ---
   const [bulkRejecting, setBulkRejecting] = useState(false)
@@ -184,7 +201,13 @@ export function ReviewerPage({
     }
   }
 
-  const visiblePending = pendingRequests.filter((request) => !hiddenIds.includes(request.id))
+  const visiblePending = pendingRequests
+    .filter((request) => !hiddenIds.includes(request.id))
+    .sort((a, b) => {
+      if (sortBy === 'sum') return getRequestCost(b, lookups) - getRequestCost(a, lookups)
+      if (sortBy === 'risk') return (getFraudScore(b) ?? -1) - (getFraudScore(a) ?? -1)
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    })
 
   return (
     <main className={`web-dashboard${selectedIds.length > 0 ? ' has-bulk-bar' : ''}`}>
@@ -196,6 +219,9 @@ export function ReviewerPage({
         >
           <ClipboardCheck size={18} />
           Проверка
+          {pendingRequests.length > 0 && (
+            <span className="tab-badge">{pendingRequests.length}</span>
+          )}
         </button>
         <button
           type="button"
@@ -247,6 +273,20 @@ export function ReviewerPage({
               <div className="limit-meter-track">
                 <span className="limit-meter-fill" style={{ width: `${limitPercent}%` }} />
               </div>
+            </div>
+
+            <div className="queue-sort" role="group" aria-label="Сортировка">
+              <span className="queue-sort-label">Сортировка:</span>
+              {SORT_OPTIONS.map((option) => (
+                <button
+                  key={option.key}
+                  type="button"
+                  className={sortBy === option.key ? 'active' : ''}
+                  onClick={() => setSortBy(option.key)}
+                >
+                  {option.label}
+                </button>
+              ))}
             </div>
 
             <div className="request-list">
@@ -305,6 +345,16 @@ export function ReviewerPage({
                   />
                 </label>
 
+                <label>
+                  <span>Комментарий к одобрению (необязательно)</span>
+                  <textarea
+                    rows={2}
+                    value={approvalDraft}
+                    placeholder="Например: проверено, всё корректно"
+                    onChange={(event) => onApprovalDraft(event.target.value)}
+                  />
+                </label>
+
                 {reviewError && (
                   <div className="inline-alert">
                     <AlertTriangle size={17} />
@@ -326,7 +376,7 @@ export function ReviewerPage({
                     type="button"
                     className="button green"
                     disabled={isSaving}
-                    onClick={() => onApprove(selectedRequest.id)}
+                    onClick={() => onApprove(selectedRequest.id, approvalDraft)}
                   >
                     <Check size={18} />
                     Подтвердить в Iiko
