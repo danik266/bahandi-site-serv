@@ -34,18 +34,22 @@ import './App.css'
 function App() {
   const navigate = useNavigate()
   // Восстанавливаем сессию из localStorage, чтобы перезагрузка страницы не разлогинивала.
-  const [currentUser, setCurrentUser] = useState<Employee | null>(() => {
+  const storedUser = (() => {
     try {
       const raw = localStorage.getItem('bahandi_user')
       return raw ? (JSON.parse(raw) as Employee) : null
     } catch {
       return null
     }
-  })
+  })()
+  const [currentUser, setCurrentUser] = useState<Employee | null>(storedUser)
   const [login, setLogin] = useState('')
   const [password, setPassword] = useState('')
   const [authError, setAuthError] = useState('')
-  const [webView, setWebView] = useState<WebView>('create')
+  // Проверяющий стартует сразу на вкладке «Проверка».
+  const [webView, setWebView] = useState<WebView>(
+    storedUser?.role === 'reviewer' ? 'review' : 'create',
+  )
   const [data, setData] = useState<BootstrapPayload>(emptyData)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -244,15 +248,18 @@ function App() {
     const file = event.target.files?.[0]
     if (!file) return
 
-    const dataUrl = await readFileAsDataUrl(file)
-    const hash = await hashText(`${file.name}:${file.size}:${file.lastModified}:${dataUrl}`)
-    setForm((current) => ({
-      ...current,
-      photoUrl: dataUrl,
-      photoName: file.name,
-      photoHash: `sha256:${hash.slice(0, 12)}`,
-    }))
-    setFormError('')
+    try {
+      const dataUrl = await readFileAsDataUrl(file)
+      // Сразу показываем фото — не блокируем превью вычислением хэша.
+      setForm((current) => ({ ...current, photoUrl: dataUrl, photoName: file.name }))
+      setFormError('')
+
+      // Отпечаток считаем отдельно (без огромного dataUrl) и устойчиво к http-origin.
+      const hash = await hashText(`${file.name}:${file.size}:${file.lastModified}`)
+      setForm((current) => ({ ...current, photoHash: `sha256:${hash.slice(0, 12)}` }))
+    } catch {
+      setFormError('Не удалось загрузить фото. Попробуйте ещё раз.')
+    }
   }
 
   async function handleAnalyze() {
@@ -498,16 +505,21 @@ function App() {
         />
       )}
 
-      <header className="brand-header">
-        <div className="brand-left">
-          <BahandiLogo />
-          <div>
-            <strong>Списание+</strong>
-            <span>{currentUser ? currentUser.name : 'Вход в систему'}</span>
+      {currentUser && (
+        <header className="brand-header">
+          <div className="brand-left">
+            <BahandiLogo />
+            <div className="brand-id">
+              <strong>SPISANDI</strong>
+              <span>
+                {currentUser.name}
+                <em className="role-chip">
+                  {currentUser.role === 'sender' ? 'Сотрудник' : 'Проверяющий'}
+                </em>
+              </span>
+            </div>
           </div>
-        </div>
 
-        {currentUser ? (
           <div className="header-actions">
             <button type="button" className="header-iiko" onClick={() => navigate('/iiko')}>
               <Database size={17} />
@@ -522,8 +534,8 @@ function App() {
               Выйти
             </button>
           </div>
-        ) : null}
-      </header>
+        </header>
+      )}
 
       {apiError && (
         <div className="inline-alert site-alert">

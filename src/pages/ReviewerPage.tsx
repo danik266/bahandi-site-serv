@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   AlertTriangle,
+  ArrowLeft,
   BadgeCheck,
   BarChart3,
   Check,
@@ -116,6 +117,29 @@ export function ReviewerPage({
 
   // --- НОВОЕ: сортировка очереди ---
   const [sortBy, setSortBy] = useState<SortBy>('time')
+
+  // --- НОВОЕ: мобильный master-detail (список ⇄ анкета) ---
+  const [detailOpen, setDetailOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 760px)').matches,
+  )
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 760px)')
+    const handler = () => setIsMobile(mq.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+
+  // При уходе с вкладки «Проверка» закрываем открытую анкету.
+  useEffect(() => {
+    if (webView !== 'review') setDetailOpen(false)
+  }, [webView])
+
+  function openDetail(requestId: string) {
+    onSelect(requestId)
+    setDetailOpen(true)
+  }
 
   // --- НОВОЕ: шторка причины для массового отказа ---
   const [bulkRejecting, setBulkRejecting] = useState(false)
@@ -260,6 +284,7 @@ export function ReviewerPage({
 
       {webView === 'review' && selectedRequest && (
         <section className="workspace review-grid">
+          {(!isMobile || !detailOpen) && (
           <div className="panel queue-panel">
             <PanelTitle icon={ClipboardCheck} title="Очередь проверки" detail="pending" />
 
@@ -304,7 +329,7 @@ export function ReviewerPage({
                       request={request}
                       active={selectedRequestId === request.id}
                       lookups={lookups}
-                      onClick={() => onSelect(request.id)}
+                      onClick={() => openDetail(request.id)}
                       selectionMode={selectionMode}
                       selected={selectedIds.includes(request.id)}
                       onLongPress={() => onLongPress(request.id)}
@@ -323,8 +348,16 @@ export function ReviewerPage({
               )}
             </div>
           </div>
+          )}
 
-          <div className="panel detail-panel">
+          {(!isMobile || detailOpen) && (
+          <motion.div
+            className="panel detail-panel"
+            key={selectedRequest.id}
+            initial={isMobile ? { opacity: 0, x: 48 } : false}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ type: 'spring', stiffness: 340, damping: 32 }}
+          >
             <RequestDetail
               request={selectedRequest}
               auditEvents={data.auditEvents.filter(
@@ -384,7 +417,19 @@ export function ReviewerPage({
                 </div>
               </div>
             )}
-          </div>
+          </motion.div>
+          )}
+
+          {isMobile && detailOpen && (
+            <button
+              type="button"
+              className="detail-back-fab"
+              onClick={() => setDetailOpen(false)}
+              aria-label="Назад к очереди"
+            >
+              <ArrowLeft size={24} />
+            </button>
+          )}
         </section>
       )}
 

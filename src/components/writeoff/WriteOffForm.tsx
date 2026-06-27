@@ -4,7 +4,6 @@ import {
   Camera,
   Hash,
   ImagePlus,
-  Sparkles,
   RefreshCw,
   Send,
   Upload,
@@ -55,36 +54,32 @@ export function WriteOffForm({
       : `${data.outlets.length} доступные точки`
 
   const quantity = Number(form.quantity)
+  const reason = lookups.reason(form.reasonId)
 
-  // Calculate progress
+  // Прогресс считаем только по полям, которые реально вводит пользователь.
+  // Точка/продукт/причина/количество подставлены по умолчанию — их не учитываем,
+  // иначе пустая форма сразу показывает высокий процент.
   let completedFields = 0
-  let totalFields = 5 // photo, outlet, product, quantity, reason
+  let totalFields = 2 // фото + комментарий
   if (form.photoUrl) completedFields++
-  if (form.outletId) completedFields++
-  if (form.productId) completedFields++
-  if (Number.isFinite(quantity) && quantity > 0) completedFields++
-  if (form.reasonId) completedFields++
+  if (form.comment.trim().length >= 10) completedFields++
 
   if (form.type === 'with_deduction') {
-    totalFields += 2 // employee, reason
+    totalFields += 2 // сотрудник + причина удержания
     if (form.deductionEmployeeId) completedFields++
-    if (form.deductionReason) completedFields++
+    if (form.deductionReason.trim()) completedFields++
   }
-  
-  const reason = lookups.reason(form.reasonId)
+
   if (reason.name.toLowerCase().includes('просрочка')) {
     totalFields += 2
     if (form.productionDate) completedFields++
     if (form.expiryDate) completedFields++
   }
   if (reason.name.toLowerCase().includes('повреждение')) {
-    totalFields += 2 // damageType, damageDiscoveredAt
+    totalFields += 2 // вид повреждения + когда обнаружено
     if (form.damageType) completedFields++
     if (form.damageDiscoveredAt) completedFields++
   }
-
-  totalFields++ // comment
-  if (form.comment.trim().length >= 10) completedFields++
 
   const percent = Math.round((completedFields / totalFields) * 100)
 

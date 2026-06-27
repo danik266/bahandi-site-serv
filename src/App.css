@@ -3,6 +3,8 @@
   --green-dark: #075928;
   --orange: var(--color-orange);
   --orange-soft: #fff0e8;
+  --green-deep: var(--color-green-deep);
+  --green-ink: var(--color-green-ink);
   --black: var(--color-text-dark);
   --ink: var(--color-text);
   --muted: var(--color-muted);
@@ -1344,6 +1346,25 @@ code {
   gap: 16px;
 }
 
+/* Кнопка возврата с экрана Iiko mock (в стиле второстепенной кнопки). */
+.iiko-back {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-button);
+  color: var(--black);
+  background: var(--surface);
+  font-weight: 700;
+}
+
+.iiko-back:active {
+  transform: scale(0.98);
+}
+
 .iiko-hero {
   display: flex;
   align-items: stretch;
@@ -1369,8 +1390,8 @@ code {
 .iiko-hero h1 {
   margin: 8px 0 6px;
   color: var(--black);
-  font-size: 32px;
-  line-height: 1.08;
+  font-size: 22px;
+  line-height: 1.15;
 }
 
 .iiko-hero p {
@@ -1697,7 +1718,7 @@ code {
 
   .iiko-hero h1,
   .iiko-document-head h2 {
-    font-size: 26px;
+    font-size: 20px;
   }
 
   .iiko-facts {
@@ -2693,4 +2714,721 @@ code {
 
 .queue-sort button:active {
   transform: scale(0.98);
+}
+
+/* ============================================================= */
+/* Аналитика: кольцевая диаграмма статусов + тренд за 7 дней      */
+/* ============================================================= */
+
+.donut-wrap {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.donut {
+  position: relative;
+  flex: 0 0 auto;
+  width: 132px;
+  height: 132px;
+  border-radius: 50%;
+}
+
+/* Дырка кольца. */
+.donut::after {
+  content: '';
+  position: absolute;
+  inset: 20px;
+  border-radius: 50%;
+  background: var(--surface);
+}
+
+.donut-center {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 2px;
+  text-align: center;
+}
+
+.donut-center strong {
+  color: var(--black);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.donut-center span {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.donut-legend {
+  display: grid;
+  flex: 1 1 160px;
+  gap: 10px;
+}
+
+.donut-empty {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.legend-dot {
+  flex: 0 0 auto;
+  width: 13px;
+  height: 13px;
+  border-radius: 4px;
+}
+
+.legend-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 0.86rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.legend-item strong {
+  flex: 0 0 auto;
+  color: var(--black);
+  font-size: 0.92rem;
+}
+
+/* Столбчатый тренд за 7 дней. */
+.trend-chart {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  align-items: end;
+  height: 168px;
+  padding-top: 6px;
+}
+
+.trend-col {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 5px;
+  height: 100%;
+  align-items: end;
+  justify-items: center;
+}
+
+.trend-count {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.trend-bar-track {
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+  height: 100%;
+}
+
+.trend-bar {
+  display: block;
+  width: 100%;
+  max-width: 26px;
+  margin: 0 auto;
+  border-radius: 6px 6px 0 0;
+  background: var(--green);
+  transition: height 0.3s ease;
+}
+
+.trend-day {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+/* ============================================================= */
+/* РЕДИЗАЙН под макет: зелёный бренд, скругления, iOS-стиль       */
+/* ============================================================= */
+
+/* --- Экран входа --- */
+.auth-shell {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: calc(100svh - 36px);
+  padding: 4px 0 48px;
+}
+
+.auth-card {
+  display: grid;
+  gap: 14px;
+  width: min(460px, 100%);
+  padding: 26px 22px 24px;
+  border: 1px solid var(--line);
+  border-radius: 26px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.auth-brand {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  margin-bottom: 2px;
+}
+
+.auth-brand-sub {
+  color: var(--green-deep);
+  font-weight: 800;
+  font-size: 0.92rem;
+  letter-spacing: 3px;
+}
+
+.auth-title {
+  margin: 4px 0 0;
+  text-align: center;
+  color: var(--green-deep);
+  font-size: 1.7rem;
+  font-weight: 800;
+}
+
+.auth-sub {
+  margin: 0 0 4px;
+  text-align: center;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.auth-field {
+  display: grid;
+  gap: 7px;
+}
+
+.auth-label {
+  color: var(--black);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.auth-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 54px;
+  padding: 0 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 16px;
+  background: var(--surface);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.auth-input:focus-within {
+  border-color: var(--green);
+  box-shadow: 0 0 0 4px rgba(24, 165, 89, 0.12);
+}
+
+.auth-input-icon {
+  flex: 0 0 auto;
+  color: var(--muted);
+}
+
+.auth-input input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 1rem;
+}
+
+.auth-input-action {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 9px;
+  color: var(--muted);
+  background: transparent;
+}
+
+.auth-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 56px;
+  margin-top: 4px;
+  border: 0;
+  border-radius: 16px;
+  color: #ffffff;
+  background: var(--green);
+  font-size: 1.05rem;
+  font-weight: 800;
+  box-shadow: 0 14px 24px -12px rgba(24, 165, 89, 0.75);
+}
+
+.auth-submit:active {
+  transform: scale(0.99);
+}
+
+.auth-submit:disabled {
+  opacity: 0.72;
+}
+
+.auth-demo {
+  margin-top: 4px;
+  padding: 14px;
+  border: 1px solid #bfe6cd;
+  border-radius: 16px;
+  background: var(--green-soft);
+}
+
+.auth-demo-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 10px;
+  color: var(--green-deep);
+  font-weight: 800;
+}
+
+.auth-demo-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.auth-demo-chip {
+  padding: 8px 12px;
+  border: 1px solid #bfe6cd;
+  border-radius: 999px;
+  color: var(--green-deep);
+  background: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.auth-demo-chip:active {
+  transform: scale(0.97);
+  border-color: var(--green);
+}
+
+.auth-foot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+/* --- Шапка с фоновой картинкой, прижата к верху без белой полосы --- */
+.brand-header {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  min-height: 0;
+  /* Выносим за паддинги .app-shell (18px), чтобы дотянуть до краёв экрана. */
+  margin: -18px -18px 4px;
+  padding: 26px 16px 18px;
+  border: 0;
+  border-radius: 0 0 26px 26px;
+  background:
+    linear-gradient(160deg, rgba(10, 70, 38, 0.28) 0%, rgba(7, 52, 28, 0.46) 100%),
+    url('/header-bg.jpg') center / cover no-repeat;
+  box-shadow: 0 16px 32px -20px rgba(10, 90, 47, 0.8);
+}
+
+@media (max-width: 640px) {
+  .brand-header {
+    /* На мобиле паддинг .app-shell = 10px. */
+    margin: -10px -10px 4px;
+    padding: 22px 14px 16px;
+  }
+}
+
+.brand-left {
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.brand-header .bahandi-logo {
+  width: 168px;
+  min-width: 168px;
+  height: 46px;
+  border-width: 5px;
+}
+
+.brand-header .bahandi-logo strong {
+  font-size: 1.9rem;
+}
+
+.brand-id {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+}
+
+.brand-id strong {
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 3px;
+}
+
+.brand-id span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.role-chip {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-style: normal;
+}
+
+.brand-header .header-actions {
+  width: 100%;
+}
+
+.brand-header .header-actions > button {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 46px;
+  border-radius: 13px;
+}
+
+.header-refresh {
+  color: var(--green-deep);
+  background: #ffffff;
+}
+
+.header-iiko,
+.header-logout {
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.16);
+}
+
+/* --- Вкладки-пилюли --- */
+.web-tabs {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.web-tabs button {
+  min-height: 44px;
+  border-radius: 12px;
+}
+
+.web-tabs button.active {
+  color: var(--green-deep);
+  background: var(--green-soft);
+  box-shadow: none;
+}
+
+/* --- Панели и карточки крупнее --- */
+.panel {
+  border-radius: 18px;
+}
+
+.metric {
+  border-radius: 16px;
+}
+
+.request-card,
+.swipe-shell,
+.mobile-request-card {
+  border-radius: 16px;
+}
+
+.history-row {
+  border-radius: 16px;
+}
+
+/* --- Кнопки --- */
+.button {
+  min-height: 52px;
+  border-radius: 14px;
+  font-weight: 800;
+}
+
+.button.green {
+  background: var(--green);
+  box-shadow: 0 14px 24px -14px rgba(24, 165, 89, 0.75);
+}
+
+/* --- Статус-бейджи как пилюли --- */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.status-badge.pending {
+  color: #9a5b00;
+  border-color: #ffe0b0;
+  background: #fff3df;
+}
+
+.status-badge.approved {
+  color: var(--green-deep);
+  border-color: #bfe6cd;
+  background: var(--green-soft);
+}
+
+.status-badge.rejected {
+  color: #b3372c;
+  border-color: #f3c7c2;
+  background: var(--red-soft);
+}
+
+.status-badge.iiko_error {
+  color: #6b51e0;
+  border-color: #d9d0ff;
+  background: #efeaff;
+}
+
+/* Фикс заголовков панелей на узких экранах: не обрезать до "Н...". */
+@media (max-width: 640px) {
+  .panel-title {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .panel-title > div {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .panel-title h2 {
+    overflow: visible;
+    white-space: normal;
+    text-overflow: clip;
+  }
+
+  .panel-title > span {
+    flex: 1 1 100%;
+    white-space: normal;
+    text-align: left;
+  }
+}
+
+/* Ровный ряд кнопок в шапке: без переноса, на телефоне — без иконок. */
+.brand-header .header-actions > button {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 700px) {
+  .brand-header .header-actions {
+    gap: 7px;
+  }
+
+  .brand-header .header-actions > button {
+    padding: 0 8px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    gap: 4px;
+  }
+
+  .brand-header .header-actions > button svg {
+    display: none;
+  }
+}
+
+/* Кнопки шапки всегда: ровный центрированный ряд из равных кнопок. */
+.brand-header .header-actions {
+  width: 100%;
+  justify-content: center;
+}
+
+.brand-header .header-actions > button {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* ОКОНЧАТЕЛЬНО: шапка — обычный флекс-столбец по центру (перебивает grid). */
+.app-shell .brand-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: center;
+}
+
+.app-shell .brand-header .brand-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.app-shell .brand-header .header-actions {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.app-shell .brand-header .header-actions > button {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* ============================================================= */
+/* Контролы формы под зелёную тему макета                        */
+/* ============================================================= */
+
+input,
+select,
+textarea {
+  border-radius: 14px;
+}
+
+input,
+select {
+  height: 50px;
+  padding: 0 14px;
+}
+
+textarea {
+  border-radius: 14px;
+}
+
+/* Зелёный фокус вместо оранжевого. */
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 4px rgba(24, 165, 89, 0.15);
+}
+
+label > span {
+  color: var(--black);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+/* Тумблер «Без / С удержанием»: активный — зелёный. */
+.segmented {
+  padding: 5px;
+  gap: 6px;
+  border-radius: 14px;
+}
+
+.segmented button {
+  min-height: 46px;
+  border-radius: 11px;
+}
+
+.segmented button.active {
+  color: #ffffff;
+  background: var(--green);
+  box-shadow: 0 8px 16px -10px rgba(24, 165, 89, 0.8);
+}
+
+.segmented button:active {
+  transform: scale(0.99);
+}
+
+/* Фото-загрузчик аккуратнее. */
+.photo-preview {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.photo-preview img {
+  border-radius: 16px;
+}
+
+/* Скруглённые фото в карточках заявок. */
+.request-card img,
+.history-row img,
+.mobile-request-card img {
+  border-radius: 12px;
+}
+
+.history-row:active,
+.history-row-button:active {
+  transform: scale(0.995);
+}
+
+/* ============================================================= */
+/* Мобильный master-detail в «Проверке»: список ⇄ анкета         */
+/* ============================================================= */
+
+@media (max-width: 760px) {
+  /* На мобиле показывается одна панель — она занимает всю ширину. */
+  .review-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Плавающая круглая стрелка «назад к очереди» (низ слева). */
+.detail-back-fab {
+  position: fixed;
+  left: 16px;
+  bottom: calc(18px + env(safe-area-inset-bottom));
+  z-index: 56;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border: 0;
+  border-radius: 50%;
+  color: #ffffff;
+  background: var(--green);
+  box-shadow: 0 14px 26px -8px rgba(24, 165, 89, 0.85);
+}
+
+.detail-back-fab:active {
+  transform: scale(0.94);
+}
+
+/* Чтобы плавающая стрелка «назад» не перекрывала кнопки решения. */
+@media (max-width: 760px) {
+  .review-grid .detail-panel {
+    padding-bottom: 84px;
+  }
 }

@@ -12,8 +12,12 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>,
 )
 
+// Сносим старый service worker и его кэш — он мешал обновлениям (отдавал старые файлы).
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    void navigator.serviceWorker.register('/sw.js')
+  void navigator.serviceWorker.getRegistrations().then((registrations) => {
+    registrations.forEach((registration) => void registration.unregister())
   })
+}
+if ('caches' in window) {
+  void caches.keys().then((keys) => keys.forEach((key) => void caches.delete(key)))
 }

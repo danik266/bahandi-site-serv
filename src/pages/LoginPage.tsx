@@ -1,6 +1,25 @@
+import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { AlertTriangle, LoaderCircle, UserCheck, UserRound } from 'lucide-react'
-import { PanelTitle } from '../components/ui'
+import {
+  AlertTriangle,
+  ArrowRight,
+  Eye,
+  EyeOff,
+  Info,
+  LoaderCircle,
+  Lock,
+  ShieldCheck,
+  User,
+  X,
+} from 'lucide-react'
+import { BahandiLogo } from '../components/ui'
+
+const DEMO_ACCOUNTS = [
+  { login: 'manager', pass: 'manager123' },
+  { login: 'aibek', pass: 'demo123' },
+  { login: 'madina', pass: 'demo123' },
+  { login: 'timur', pass: 'demo123' },
+]
 
 export function LoginPage({
   login,
@@ -19,34 +38,65 @@ export function LoginPage({
   onLoginChange: (value: string) => void
   onPasswordChange: (value: string) => void
 }) {
+  const [showPass, setShowPass] = useState(false)
+
   return (
-    <main className="login-shell">
-      <form className="panel login-panel" onSubmit={onLogin}>
-        <PanelTitle icon={UserRound} title="Авторизация" detail="role access" />
-        <p className="login-copy">
-          Войдите сотрудником торговой точки или проверяющим. Сотрудник создает
-          заявки, проверяющий подтверждает списание и отправляет акт в Iiko.
+    <main className="auth-shell">
+      <form className="auth-card" onSubmit={onLogin}>
+        <div className="auth-brand">
+          <BahandiLogo />
+          <span className="auth-brand-sub">SPISANDI</span>
+        </div>
+
+        <h1 className="auth-title">Добро пожаловать!</h1>
+        <p className="auth-sub">
+          Войдите личным логином
+          <br />и пин-кодом.
         </p>
 
-        <label>
-          <span>Логин</span>
-          <input
-            value={login}
-            autoComplete="username"
-            placeholder="Например: reviewer"
-            onChange={(event) => onLoginChange(event.target.value)}
-          />
+        <label className="auth-field">
+          <span className="auth-label">Логин</span>
+          <div className="auth-input">
+            <User size={19} className="auth-input-icon" />
+            <input
+              value={login}
+              autoComplete="username"
+              placeholder="Например: aibek"
+              onChange={(event) => onLoginChange(event.target.value)}
+            />
+            {login && (
+              <button
+                type="button"
+                className="auth-input-action"
+                onClick={() => onLoginChange('')}
+                aria-label="Очистить"
+              >
+                <X size={18} />
+              </button>
+            )}
+          </div>
         </label>
 
-        <label>
-          <span>Пароль</span>
-          <input
-            value={password}
-            type="password"
-            autoComplete="current-password"
-            placeholder="Пароль сотрудника"
-            onChange={(event) => onPasswordChange(event.target.value)}
-          />
+        <label className="auth-field">
+          <span className="auth-label">Пароль</span>
+          <div className="auth-input">
+            <Lock size={19} className="auth-input-icon" />
+            <input
+              value={password}
+              type={showPass ? 'text' : 'password'}
+              autoComplete="current-password"
+              placeholder="Введите пароль"
+              onChange={(event) => onPasswordChange(event.target.value)}
+            />
+            <button
+              type="button"
+              className="auth-input-action"
+              onClick={() => setShowPass((value) => !value)}
+              aria-label={showPass ? 'Скрыть' : 'Показать'}
+            >
+              {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
         </label>
 
         {authError && (
@@ -56,10 +106,38 @@ export function LoginPage({
           </div>
         )}
 
-        <button type="submit" className="button green submit-button" disabled={isSaving}>
-          {isSaving ? <LoaderCircle size={18} /> : <UserCheck size={18} />}
+        <button type="submit" className="auth-submit" disabled={isSaving}>
+          {isSaving ? <LoaderCircle size={20} className="spin" /> : null}
           Войти
+          {!isSaving && <ArrowRight size={20} />}
         </button>
+
+        <div className="auth-demo">
+          <div className="auth-demo-head">
+            <Info size={16} />
+            Демо-аккаунт
+          </div>
+          <div className="auth-demo-grid">
+            {DEMO_ACCOUNTS.map((account) => (
+              <button
+                key={account.login}
+                type="button"
+                className="auth-demo-chip"
+                onClick={() => {
+                  onLoginChange(account.login)
+                  onPasswordChange(account.pass)
+                }}
+              >
+                {account.login}/{account.pass}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="auth-foot">
+          <ShieldCheck size={16} />
+          По вопросам доступа обратитесь к администратору.
+        </div>
       </form>
     </main>
   )

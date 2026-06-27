@@ -1,5 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Activity, CheckCircle2, Database, FileJson2, Radio, RefreshCw } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import {
+  Activity,
+  ArrowLeft,
+  CheckCircle2,
+  Database,
+  FileJson2,
+  Radio,
+  RefreshCw,
+} from 'lucide-react'
 import { API_BASE } from '../api/client'
 import { loadIikoMockDocuments } from '../api/iiko'
 import type { IikoMockDocument } from '../types'
@@ -21,6 +30,7 @@ const dateFormatter = new Intl.DateTimeFormat('ru-RU', {
 })
 
 export function IikoMockPage() {
+  const navigate = useNavigate()
   const [documents, setDocuments] = useState<IikoMockDocument[]>([])
   const [selectedId, setSelectedId] = useState('')
   const [streamState, setStreamState] = useState<StreamState>('connecting')
@@ -90,6 +100,11 @@ export function IikoMockPage() {
 
   return (
     <main className="iiko-page">
+      <button type="button" className="iiko-back" onClick={() => navigate('/')}>
+        <ArrowLeft size={18} />
+        Назад к заявкам
+      </button>
+
       <section className="iiko-hero">
         <div>
           <div className="iiko-eyebrow">

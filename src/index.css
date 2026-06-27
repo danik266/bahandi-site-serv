@@ -8,15 +8,17 @@
   --color-gray: #999999;
   --color-light-gray: #cecece;
   --color-orange: #ff5e12;
-  --color-green: #0d803d;
+  --color-green: #18a559;
+  --color-green-deep: #0f7a40;
+  --color-green-ink: #0a5a2f;
   --color-bg: #ffffff;
-  --color-bg-soft: #f8f8f8;
-  --color-border: #dee2e6;
-  --radius-button: 10px;
-  --radius-card: 14px;
-  --radius-small: 4.8px;
-  --radius-input: 6px;
-  --shadow-card: rgba(0, 0, 0, 0.12) 0px 3px 30px -10px;
+  --color-bg-soft: #eef3ef;
+  --color-border: #e3e9e4;
+  --radius-button: 14px;
+  --radius-card: 22px;
+  --radius-small: 10px;
+  --radius-input: 14px;
+  --shadow-card: 0 18px 40px -22px rgba(13, 50, 28, 0.28);
 
   font-family: var(--font-main);
   font-size: 16px;
