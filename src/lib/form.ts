@@ -14,6 +14,12 @@ export function createDefaultForm(data: BootstrapPayload, user?: Employee): Form
     photoUrl: '',
     photoName: '',
     photoHash: '',
+    damageType: '',
+    damageDiscoveredAt: '',
+    productionDate: '',
+    expiryDate: '',
+    deductionReason: '',
+    managerComment: '',
   }
 }
 
@@ -29,5 +35,12 @@ export function createEmptyForm(): FormState {
     photoUrl: '',
     photoName: '',
     photoHash: '',
+    damageType: '',
+    damageDiscoveredAt: '',
+    productionDate: '',
+    expiryDate: '',
+    deductionReason: '',
+    managerComment: '',
   }
 }
+

@@ -89,6 +89,24 @@ export type FormState = {
   photoUrl: string
   photoName: string
   photoHash: string
+  damageType: string
+  damageDiscoveredAt: string
+  productionDate: string
+  expiryDate: string
+  deductionReason: string
+  managerComment: string
+}
+
+export type AiAnalysisResult = {
+  productId: string
+  productName: string
+  reasonId: string
+  quantity: number
+  damageType: string
+  damageDiscoveredAt: string
+  confidence: number
+  signs: string[]
+  generatedComment: string
 }
 
 export type CreateRequestPayload = {

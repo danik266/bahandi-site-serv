@@ -31,7 +31,11 @@ export function HistoryView({
         </label>
         <div className="history-table">
           {requests.map((request) => (
-            <HistoryRow key={request.id} request={request} lookups={lookups} />
+            <HistoryRow
+              key={request.id}
+              request={request}
+              lookups={lookups}
+            />
           ))}
         </div>
       </div>
