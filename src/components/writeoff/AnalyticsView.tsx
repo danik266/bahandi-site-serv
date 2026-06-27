@@ -4,6 +4,7 @@ import {
   CheckCircle2,
   CircleDollarSign,
   Database,
+  Download,
   FileText,
   Hash,
   MessageSquareText,
@@ -58,10 +59,39 @@ export function AnalyticsView({
   const trend = buildDailyTrend(data.requests)
   const trendMax = Math.max(1, ...trend.map((day) => day.count))
 
+  function exportAnalytics() {
+    const rows = [
+      ['id', 'status', 'outlet', 'product', 'quantity', 'amount', 'createdAt'],
+      ...data.requests.map((request) => [
+        request.id,
+        request.status,
+        lookups.outlet(request.outletId).name,
+        lookups.product(request.productId).name,
+        String(request.quantity),
+        String(getRequestCost(request, lookups)),
+        request.createdAt,
+      ]),
+    ]
+    const csv = rows.map((row) => row.map(escapeCsvCell).join(',')).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `bahandi-stat-${new Date().toISOString().slice(0, 10)}.csv`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <section className="workspace analytics-grid">
       <div className="panel analytics-summary">
-        <PanelTitle icon={BarChart3} title="Итоги смены" detail="сегодня" />
+        <div className="analytics-title-row">
+          <PanelTitle icon={BarChart3} title="Итоги смены" detail="сегодня" />
+          <button type="button" className="analytics-export" onClick={exportAnalytics}>
+            <Download size={17} />
+            Экспорт
+          </button>
+        </div>
         <div className="analytics-cards">
           <Metric icon={FileText} label="Заявок сегодня" value={metrics.today} tone="black" />
           <Metric icon={CheckCircle2} label="Закрыто" value={metrics.approved} tone="green" />
@@ -146,6 +176,10 @@ function buildConic(segments: Segment[], total: number) {
     return `${segment.color} ${start}% ${end}%`
   })
   return `conic-gradient(${stops.join(', ')})`
+}
+
+function escapeCsvCell(value: string) {
+  return `"${value.replace(/"/g, '""')}"`
 }
 
 // Последние 7 дней: метка-число дня + количество заявок.

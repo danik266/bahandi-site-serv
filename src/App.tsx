@@ -251,7 +251,13 @@ function App() {
     try {
       const dataUrl = await readFileAsDataUrl(file)
       // Сразу показываем фото — не блокируем превью вычислением хэша.
-      setForm((current) => ({ ...current, photoUrl: dataUrl, photoName: file.name }))
+      setForm((current) => ({
+        ...current,
+        photoUrl: dataUrl,
+        photoName: file.name,
+        photoUrls: [],
+        photoNames: [],
+      }))
       setFormError('')
 
       // Отпечаток считаем отдельно (без огромного dataUrl) и устойчиво к http-origin.
@@ -259,7 +265,49 @@ function App() {
       setForm((current) => ({ ...current, photoHash: `sha256:${hash.slice(0, 12)}` }))
     } catch {
       setFormError('Не удалось загрузить фото. Попробуйте ещё раз.')
+    } finally {
+      event.currentTarget.value = ''
     }
+  }
+
+  async function handleExtraPhotoChange(event: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? [])
+    if (!files.length) return
+
+    try {
+      const dataUrls = await Promise.all(files.map((file) => readFileAsDataUrl(file)))
+      setForm((current) => ({
+        ...current,
+        photoUrls: [...(current.photoUrls ?? []), ...dataUrls],
+        photoNames: [...(current.photoNames ?? []), ...files.map((file) => file.name)],
+      }))
+      setFormError('')
+    } catch {
+      setFormError('Не удалось загрузить дополнительные фото.')
+    } finally {
+      event.currentTarget.value = ''
+    }
+  }
+
+  function removeMainPhoto() {
+    setForm((current) => ({
+      ...current,
+      photoUrl: '',
+      photoName: '',
+      photoUrls: [],
+      photoNames: [],
+      photoHash: '',
+    }))
+    setFormError('')
+  }
+
+  function removeExtraPhoto(index: number) {
+    setForm((current) => ({
+      ...current,
+      photoUrls: (current.photoUrls ?? []).filter((_, photoIndex) => photoIndex !== index),
+      photoNames: (current.photoNames ?? []).filter((_, photoIndex) => photoIndex !== index),
+    }))
+    setFormError('')
   }
 
   async function handleAnalyze() {
@@ -291,6 +339,8 @@ function App() {
       ...current,
       photoUrl: '/writeoff-evidence.png',
       photoName: 'writeoff-evidence.png',
+      photoUrls: [],
+      photoNames: [],
       photoHash: `sha256:web-demo-${Date.now().toString(16).slice(-8)}`,
       quantity: '5',
       comment: 'Тестовое автоматическое списание для проверки работы системы.',
@@ -354,6 +404,11 @@ function App() {
         comment,
         photoUrl: form.photoUrl,
         photoName: form.photoName,
+        photoUrls: [form.photoUrl, ...(form.photoUrls ?? [])].filter(Boolean),
+        photoNames: [
+          form.photoName || 'photo-1.jpg',
+          ...(form.photoNames ?? []),
+        ],
         photoHash: form.photoHash,
         createdById: currentUser.id,
       })
@@ -589,6 +644,9 @@ function App() {
                   onSubmit={handleSubmit}
                   onFieldChange={setFormField}
                   onPhotoChange={handlePhotoChange}
+                  onExtraPhotoChange={handleExtraPhotoChange}
+                  onRemovePhoto={removeMainPhoto}
+                  onRemoveExtraPhoto={removeExtraPhoto}
                   onDemoPhoto={useDemoPhoto}
                   onSearch={setSearchTerm}
                   aiHint={aiHint}

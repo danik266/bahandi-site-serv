@@ -28,7 +28,7 @@ export type Employee = {
   login: string
   outletId: string
   outletIds: string[]
-  accessScope: 'assigned' | 'all'
+  accessScope: 'assigned' | 'city' | 'all'
   iikoEmployeeId: string
 }
 
@@ -49,6 +49,8 @@ export type WriteOffRequest = {
   comment: string
   photoUrl: string
   photoName: string
+  photoUrls?: string[]
+  photoNames?: string[]
   photoHash: string
   status: Status
   createdById: string
@@ -91,6 +93,8 @@ export type FormState = {
   comment: string
   photoUrl: string
   photoName: string
+  photoUrls?: string[]
+  photoNames?: string[]
   photoHash: string
   damageType: string
   damageDiscoveredAt: string
@@ -122,6 +126,8 @@ export type CreateRequestPayload = {
   comment: string
   photoUrl: string
   photoName: string
+  photoUrls?: string[]
+  photoNames?: string[]
   photoHash: string
   createdById: string
 }

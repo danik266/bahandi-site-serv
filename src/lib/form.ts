@@ -13,6 +13,8 @@ export function createDefaultForm(data: BootstrapPayload, user?: Employee): Form
     comment: '',
     photoUrl: '',
     photoName: '',
+    photoUrls: [],
+    photoNames: [],
     photoHash: '',
     damageType: '',
     damageDiscoveredAt: '',
@@ -34,6 +36,8 @@ export function createEmptyForm(): FormState {
     comment: '',
     photoUrl: '',
     photoName: '',
+    photoUrls: [],
+    photoNames: [],
     photoHash: '',
     damageType: '',
     damageDiscoveredAt: '',
@@ -43,4 +47,3 @@ export function createEmptyForm(): FormState {
     managerComment: '',
   }
 }
-

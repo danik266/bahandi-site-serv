@@ -25,6 +25,9 @@ export function EmployeePage({
   onSubmit,
   onFieldChange,
   onPhotoChange,
+  onExtraPhotoChange,
+  onRemovePhoto,
+  onRemoveExtraPhoto,
   onDemoPhoto,
   onSearch,
   aiHint,
@@ -47,6 +50,9 @@ export function EmployeePage({
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
   onFieldChange: <K extends keyof FormState>(key: K, value: FormState[K]) => void
   onPhotoChange: (event: ChangeEvent<HTMLInputElement>) => void
+  onExtraPhotoChange: (event: ChangeEvent<HTMLInputElement>) => void
+  onRemovePhoto: () => void
+  onRemoveExtraPhoto: (index: number) => void
   onDemoPhoto: () => void
   onSearch: (value: string) => void
   aiHint: string
@@ -89,6 +95,9 @@ export function EmployeePage({
             onSubmit={onSubmit}
             onFieldChange={onFieldChange}
             onPhotoChange={onPhotoChange}
+            onExtraPhotoChange={onExtraPhotoChange}
+            onRemovePhoto={onRemovePhoto}
+            onRemoveExtraPhoto={onRemoveExtraPhoto}
             onDemoPhoto={onDemoPhoto}
             aiHint={aiHint}
             onHintChange={onHintChange}
@@ -112,4 +121,3 @@ export function EmployeePage({
     </main>
   )
 }
-

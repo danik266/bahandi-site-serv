@@ -29,12 +29,20 @@ export function RequestDetail({
   const author = lookups.employee(request.createdById)
   const reviewer = request.reviewedById ? lookups.employee(request.reviewedById) : undefined
   const StatusIcon = statusIcon[request.status]
+  const photos = request.photoUrls?.length ? request.photoUrls : [request.photoUrl]
 
   return (
     <div className="request-detail">
       <div className="detail-photo">
-        <img src={request.photoUrl} alt={`Фото заявки ${request.id}`} />
+        <img src={photos[0]} alt={`Фото заявки ${request.id}`} />
       </div>
+      {photos.length > 1 && (
+        <div className="detail-photo-strip" aria-label="Дополнительные фото">
+          {photos.map((photoUrl, index) => (
+            <img key={`${photoUrl}-${index}`} src={photoUrl} alt="" />
+          ))}
+        </div>
+      )}
 
       <div className="detail-header">
         <div>

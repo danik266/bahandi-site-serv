@@ -7,6 +7,7 @@ import {
   RefreshCw,
   Send,
   Upload,
+  X,
 } from 'lucide-react'
 import { PanelTitle } from '../ui'
 import { CostSummary, FormProgressBar } from './'
@@ -25,6 +26,9 @@ export function WriteOffForm({
   onSubmit,
   onFieldChange,
   onPhotoChange,
+  onExtraPhotoChange,
+  onRemovePhoto,
+  onRemoveExtraPhoto,
   onDemoPhoto,
   formMode,
   onFormModeChange,
@@ -40,6 +44,9 @@ export function WriteOffForm({
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
   onFieldChange: <K extends keyof FormState>(key: K, value: FormState[K]) => void
   onPhotoChange: (event: ChangeEvent<HTMLInputElement>) => void
+  onExtraPhotoChange: (event: ChangeEvent<HTMLInputElement>) => void
+  onRemovePhoto: () => void
+  onRemoveExtraPhoto: (index: number) => void
   onDemoPhoto: () => void
   aiHint: string
   onHintChange: (value: string) => void
@@ -109,7 +116,17 @@ export function WriteOffForm({
       <div className="photo-uploader">
         <div className="photo-preview">
           {form.photoUrl ? (
-            <img src={form.photoUrl} alt="Фото продукции для списания" />
+            <>
+              <img src={form.photoUrl} alt="Фото продукции для списания" />
+              <button
+                type="button"
+                className="photo-remove-button"
+                onClick={onRemovePhoto}
+                aria-label="Удалить фото"
+              >
+                <X size={16} />
+              </button>
+            </>
           ) : (
             <div className="empty-photo">
               <ImagePlus size={30} />
@@ -128,11 +145,39 @@ export function WriteOffForm({
               onChange={onPhotoChange}
             />
           </label>
+          <label className={`button white ${!form.photoUrl ? 'disabled-label' : ''}`}>
+            <ImagePlus size={17} />
+            Добавить фото
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              disabled={!form.photoUrl}
+              onChange={onExtraPhotoChange}
+            />
+          </label>
           <button type="button" className="button orange-soft" onClick={onDemoPhoto}>
             <RefreshCw size={17} />
             Сделать
           </button>
         </div>
+        {form.photoUrl && Boolean(form.photoUrls?.length) && (
+          <div className="extra-photo-strip">
+            {form.photoUrls?.map((photoUrl, index) => (
+              <div className="extra-photo-thumb" key={`${photoUrl}-${index}`}>
+                <img src={photoUrl} alt="" />
+                <button
+                  type="button"
+                  className="extra-photo-remove"
+                  onClick={() => onRemoveExtraPhoto(index)}
+                  aria-label="Удалить дополнительное фото"
+                >
+                  <X size={13} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
         {form.photoHash && (
           <div className="photo-meta">
             <Hash size={14} />

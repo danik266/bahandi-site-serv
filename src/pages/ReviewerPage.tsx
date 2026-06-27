@@ -286,7 +286,7 @@ export function ReviewerPage({
         <section className="workspace review-grid">
           {(!isMobile || !detailOpen) && (
           <div className="panel queue-panel">
-            <PanelTitle icon={ClipboardCheck} title="Очередь проверки" detail="pending" />
+            <PanelTitle icon={ClipboardCheck} title="Очередь проверки" detail="На проверке" />
 
             <div className={`limit-meter${limitOver ? ' over' : ''}`}>
               <div className="limit-meter-head">

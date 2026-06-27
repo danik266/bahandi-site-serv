@@ -19,6 +19,7 @@ export function SubmitPreviewModal({
   const reason = lookups.reason(form.reasonId)
   const quantity = Number(form.quantity) || 0
   const totalCost = product.cost * quantity
+  const photos = [form.photoUrl, ...(form.photoUrls ?? [])].filter(Boolean)
 
   return (
     <div className="modal-overlay">
@@ -32,7 +33,11 @@ export function SubmitPreviewModal({
         <div className="preview-grid">
           <div className="preview-photo">
             <span>Фото</span>
-            <img src={form.photoUrl} alt="Preview" />
+            <div className={photos.length > 1 ? 'preview-photo-grid' : 'preview-photo-single'}>
+              {photos.map((photoUrl, index) => (
+                <img key={`${photoUrl}-${index}`} src={photoUrl} alt="" />
+              ))}
+            </div>
           </div>
 
           <div className="preview-details">

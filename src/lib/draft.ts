@@ -11,6 +11,10 @@ export function saveDraft(userId: string, form: FormState): void {
       ...form,
       photoUrl: form.photoUrl.startsWith('data:') ? '' : form.photoUrl,
       photoName: form.photoUrl.startsWith('data:') ? '' : form.photoName,
+      photoUrls: form.photoUrls?.filter((photoUrl) => !photoUrl.startsWith('data:')) ?? [],
+      photoNames: form.photoUrls?.some((photoUrl) => photoUrl.startsWith('data:'))
+        ? []
+        : form.photoNames ?? [],
       photoHash: form.photoUrl.startsWith('data:') ? '' : form.photoHash,
     }
     const payload: DraftPayload = { form: toSave, savedAt: new Date().toISOString() }
