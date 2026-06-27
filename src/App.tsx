@@ -15,9 +15,12 @@ import { createDefaultForm, createEmptyForm } from './lib/form'
 import { readFileAsDataUrl, hashText } from './lib/file'
 import { createLookups } from './lib/lookups'
 import { getRequestCost } from './lib/request'
+import { analyzePhoto } from './lib/ai'
+import { clearDraft, loadDraft, saveDraft } from './lib/draft'
 import { LoginPage } from './pages/LoginPage'
 import { EmployeePage } from './pages/EmployeePage'
 import { ReviewerPage } from './pages/ReviewerPage'
+import { SubmitPreviewModal, SuccessToast } from './components/writeoff'
 import type {
   BootstrapPayload,
   Employee,
@@ -46,8 +49,20 @@ function App() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [apiError, setApiError] = useState('')
+  
+  // Form State
   const [form, setForm] = useState<FormState>(createEmptyForm())
   const [formError, setFormError] = useState('')
+  
+  // Smart Features State
+  const [formMode, setFormMode] = useState<'initial' | 'filling'>('initial')
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [aiHint, setAiHint] = useState('')
+  const [showPreview, setShowPreview] = useState(false)
+  const [showSuccessToast, setShowSuccessToast] = useState(false)
+  const [successMessage, setSuccessMessage] = useState('')
+
+  // Reviewer State
   const [searchTerm, setSearchTerm] = useState('')
   const [rejectionDraft, setRejectionDraft] = useState('')
   const [reviewError, setReviewError] = useState('')
@@ -69,17 +84,22 @@ function App() {
           ? current
           : payload.requests[0]?.id || '',
       )
-      setForm((current) =>
-        current.outletId
-          ? current
-          : createDefaultForm(payload, activeUser ?? payload.employees[0]),
-      )
+      
+      // Load Draft or Default
+      if (!form.outletId) {
+        if (activeUser?.role === 'sender') {
+          const draft = loadDraft(activeUser.id)
+          setForm(draft ? { ...createDefaultForm(payload, activeUser), ...draft } : createDefaultForm(payload, activeUser))
+        } else {
+          setForm(createDefaultForm(payload, activeUser ?? payload.employees[0]))
+        }
+      }
     } catch (error) {
       setApiError(error instanceof Error ? error.message : 'Не удалось загрузить данные')
     } finally {
       setIsLoading(false)
     }
-  }, [currentUser])
+  }, [currentUser, form.outletId])
 
   useEffect(() => {
     void refreshData()
@@ -102,6 +122,15 @@ function App() {
     }, POLL_MS)
     return () => window.clearInterval(intervalId)
   }, [currentUser?.role, refreshData])
+
+  // Draft Auto-Save (сотрудник, вкладка создания)
+  useEffect(() => {
+    if (!currentUser || currentUser.role !== 'sender' || webView !== 'create') return
+    const interval = setInterval(() => {
+      saveDraft(currentUser.id, form)
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [currentUser, form, webView])
 
   // Кнопка «Обновить» — полная перезагрузка страницы (сессия сохранена в localStorage).
   function handleRefresh() {
@@ -171,7 +200,14 @@ function App() {
       localStorage.setItem('bahandi_user', JSON.stringify(result.user))
       setData(payload)
       setWebView(result.user.role === 'sender' ? 'create' : 'review')
-      setForm(createDefaultForm(payload, result.user))
+      
+      if (result.user.role === 'sender') {
+        const draft = loadDraft(result.user.id)
+        setForm(draft ? { ...createDefaultForm(payload, result.user), ...draft } : createDefaultForm(payload, result.user))
+      } else {
+        setForm(createDefaultForm(payload, result.user))
+      }
+      
       setSelectedRequestId(payload.requests[0]?.id || '')
       setPassword('')
       navigate(result.user.role === 'sender' ? '/employee' : '/reviewer')
@@ -189,6 +225,8 @@ function App() {
     setAuthError('')
     setData(emptyData)
     setForm(createEmptyForm())
+    setFormMode('initial')
+    setAiHint('')
     setWebView('create')
     setSelectionMode(false)
     setSelectedIds([])
@@ -215,22 +253,54 @@ function App() {
     setFormError('')
   }
 
+  async function handleAnalyze() {
+    if (!form.photoUrl) return
+    setIsAnalyzing(true)
+    setFormError('')
+    try {
+      const result = await analyzePhoto(form.photoUrl, aiHint, data.products, data.reasons)
+      // Auto-fill form and advance wizard step
+      setForm((current) => ({
+        ...current,
+        productId: result.productId,
+        reasonId: result.reasonId,
+        quantity: String(result.quantity || 1),
+        damageType: result.damageType || '',
+        damageDiscoveredAt: result.damageDiscoveredAt || '',
+        comment: result.generatedComment,
+      }))
+      setFormMode('filling')
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Ошибка ИИ анализа')
+    } finally {
+      setIsAnalyzing(false)
+    }
+  }
+
   function useDemoPhoto() {
     setForm((current) => ({
       ...current,
       photoUrl: '/writeoff-evidence.png',
       photoName: 'writeoff-evidence.png',
       photoHash: `sha256:web-demo-${Date.now().toString(16).slice(-8)}`,
+      quantity: '5',
+      comment: 'Тестовое автоматическое списание для проверки работы системы.',
+      damageType: 'Помято',
+      damageDiscoveredAt: 'При приемке товара',
+      productionDate: '2026-06-25',
+      expiryDate: '2026-06-27',
+      deductionEmployeeId: data?.employees?.find(e => e.role === 'sender')?.id || '',
+      deductionReason: 'Халатное отношение к продукции',
+      managerComment: 'Сотрудник предупрежден о недопустимости подобных ошибок.',
     }))
     setFormError('')
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!currentUser) return
 
     const quantity = Number(form.quantity)
-    const product = lookups.product(form.productId)
     const comment = form.comment.trim()
 
     if (!form.photoUrl) {
@@ -253,11 +323,20 @@ function App() {
       return
     }
 
+    // Show preview modal instead of submitting directly
+    setShowPreview(true)
+  }
+
+  async function confirmSubmit() {
+    if (!currentUser) return
+    const quantity = Number(form.quantity)
+    const comment = form.comment.trim()
+
     try {
       setIsSaving(true)
       const result = await createWriteOff({
         outletId: form.outletId,
-        productId: product.id,
+        productId: form.productId,
         quantity,
         reasonId: form.reasonId,
         type: form.type,
@@ -269,12 +348,22 @@ function App() {
         photoHash: form.photoHash,
         createdById: currentUser.id,
       })
-      setSelectedRequestId(result.request.id)
-      setWebView('mine')
+      
+      // Cleanup draft and form state
+      clearDraft(currentUser.id)
       setForm(createDefaultForm(data, currentUser))
+      setFormMode('initial')
+      setAiHint('')
+      setShowPreview(false)
+      
+      setSuccessMessage(`Заявка №${result.request.id.slice(-4)} успешно создана`)
+      setShowSuccessToast(true)
+      
+      setWebView('mine')
       await refreshData()
     } catch (error) {
       setFormError(error instanceof Error ? error.message : 'Не удалось сохранить заявку.')
+      setShowPreview(false)
     } finally {
       setIsSaving(false)
     }
@@ -388,6 +477,23 @@ function App() {
 
   return (
     <div className="app-shell web">
+      {showPreview && (
+        <SubmitPreviewModal
+          form={form}
+          lookups={lookups}
+          onCancel={() => setShowPreview(false)}
+          onConfirm={confirmSubmit}
+          isSubmitting={isSaving}
+        />
+      )}
+      
+      {showSuccessToast && (
+        <SuccessToast
+          message={successMessage}
+          onClose={() => setShowSuccessToast(false)}
+        />
+      )}
+
       <header className="brand-header">
         <div className="brand-left">
           <BahandiLogo />
@@ -453,7 +559,7 @@ function App() {
                   form={form}
                   formError={formError}
                   isSaving={isSaving}
-                  myRequests={myRequests}
+                  isAnalyzing={isAnalyzing}
                   filteredRequests={filteredRequests}
                   webView={webView}
                   lookups={lookups}
@@ -464,6 +570,11 @@ function App() {
                   onPhotoChange={handlePhotoChange}
                   onDemoPhoto={useDemoPhoto}
                   onSearch={setSearchTerm}
+                  aiHint={aiHint}
+                  onHintChange={setAiHint}
+                  formMode={formMode}
+                  onFormModeChange={setFormMode}
+                  onAnalyze={handleAnalyze}
                 />
               ) : (
                 <Navigate to={currentUser ? '/reviewer' : '/login'} replace />
@@ -514,3 +625,4 @@ function App() {
 }
 
 export default App
+

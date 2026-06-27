@@ -1,7 +1,6 @@
 import type { ChangeEvent, FormEvent } from 'react'
-import { ClipboardList, Send, Store } from 'lucide-react'
-import { InfoPanel } from '../components/ui'
-import { HistoryView, WriteOffForm } from '../components/writeoff'
+import { ClipboardList, Send } from 'lucide-react'
+import { HistoryView, SmartSidePanel, WriteOffForm } from '../components/writeoff'
 import type {
   BootstrapPayload,
   Employee,
@@ -17,7 +16,7 @@ export function EmployeePage({
   form,
   formError,
   isSaving,
-  myRequests,
+  isAnalyzing,
   filteredRequests,
   webView,
   lookups,
@@ -28,13 +27,18 @@ export function EmployeePage({
   onPhotoChange,
   onDemoPhoto,
   onSearch,
+  aiHint,
+  onHintChange,
+  formMode,
+  onFormModeChange,
+  onAnalyze,
 }: {
   data: BootstrapPayload
   currentUser: Employee
   form: FormState
   formError: string
   isSaving: boolean
-  myRequests: WriteOffRequest[]
+  isAnalyzing: boolean
   filteredRequests: WriteOffRequest[]
   webView: WebView
   lookups: Lookups
@@ -45,12 +49,12 @@ export function EmployeePage({
   onPhotoChange: (event: ChangeEvent<HTMLInputElement>) => void
   onDemoPhoto: () => void
   onSearch: (value: string) => void
+  aiHint: string
+  onHintChange: (value: string) => void
+  formMode: 'initial' | 'filling'
+  onFormModeChange: (mode: 'initial' | 'filling') => void
+  onAnalyze: () => void
 }) {
-  const accessLabel =
-    currentUser.accessScope === 'all'
-      ? 'Все точки'
-      : data.outlets.map((outlet) => outlet.name.replace('Bahandi ', '')).join(', ')
-
   return (
     <main className="web-dashboard">
       <nav className="web-tabs two">
@@ -80,23 +84,20 @@ export function EmployeePage({
             form={form}
             formError={formError}
             isSaving={isSaving}
+            isAnalyzing={isAnalyzing}
             lookups={lookups}
             onSubmit={onSubmit}
             onFieldChange={onFieldChange}
             onPhotoChange={onPhotoChange}
             onDemoPhoto={onDemoPhoto}
+            aiHint={aiHint}
+            onHintChange={onHintChange}
+            formMode={formMode}
+            onFormModeChange={onFormModeChange}
+            onAnalyze={onAnalyze}
           />
           <aside className="side-rail">
-            <InfoPanel
-              icon={Store}
-              title="Текущий доступ"
-              rows={[
-                ['role', currentUser.role],
-                ['outlets', accessLabel || lookups.outlet(currentUser.outletId).name],
-                ['employeeId', currentUser.iikoEmployeeId],
-                ['requests', String(myRequests.length)],
-              ]}
-            />
+            <SmartSidePanel form={form} lookups={lookups} />
           </aside>
         </section>
       ) : (
@@ -111,3 +112,4 @@ export function EmployeePage({
     </main>
   )
 }
+
