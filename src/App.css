@@ -1,25 +1,27 @@
 .app-shell {
-  --green: #007434;
-  --green-dark: #004b24;
-  --orange: #ff5a1f;
+  --green: var(--color-green);
+  --green-dark: #075928;
+  --orange: var(--color-orange);
   --orange-soft: #fff0e8;
-  --black: #24211f;
-  --ink: #1d232b;
-  --muted: #6f7885;
-  --surface: #ffffff;
-  --surface-soft: #f6f6f4;
-  --line: #e4e4df;
-  --line-strong: #cfcfc7;
+  --black: var(--color-text-dark);
+  --ink: var(--color-text);
+  --muted: var(--color-muted);
+  --surface: var(--color-bg);
+  --surface-soft: var(--color-bg-soft);
+  --line: var(--color-border);
+  --line-strong: var(--color-light-gray);
   --red: #c83c31;
   --red-soft: #fff0ee;
   --green-soft: #e8f6ed;
-  --shadow: 0 18px 55px rgba(32, 28, 24, 0.1);
+  --shadow: var(--shadow-card);
 
   width: min(1180px, 100%);
   min-height: 100svh;
   margin: 0 auto;
   padding: 18px;
   color: var(--ink);
+  font-family: var(--font-main);
+  font-size: 17.6px;
 }
 
 .brand-header {
@@ -30,9 +32,9 @@
   min-height: 82px;
   padding: 12px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius-card);
   background: var(--surface);
-  box-shadow: 0 10px 34px rgba(32, 28, 24, 0.07);
+  box-shadow: var(--shadow);
 }
 
 .brand-left {
@@ -57,13 +59,13 @@
 
 .brand-left strong {
   color: var(--black);
-  font-size: 1.08rem;
+  font-size: 19.2px;
   font-weight: 900;
 }
 
 .brand-left span {
   color: var(--muted);
-  font-size: 0.82rem;
+  font-size: 14.4px;
   font-weight: 800;
 }
 
@@ -134,7 +136,7 @@
   min-width: 280px;
   padding: 4px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius-button);
   background: var(--surface-soft);
 }
 
@@ -147,7 +149,7 @@
   gap: 8px;
   min-height: 42px;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--radius-input);
   color: var(--muted);
   background: transparent;
   font-weight: 900;
@@ -169,7 +171,7 @@
   min-height: 44px;
   padding: 0 16px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-button);
   color: #ffffff;
   background: var(--green);
   font-weight: 950;
@@ -194,7 +196,7 @@
   min-height: 44px;
   padding: 0 16px;
   border: 1px solid var(--line-strong);
-  border-radius: 8px;
+  border-radius: var(--radius-button);
   color: var(--black);
   background: var(--surface);
   font-weight: 950;
@@ -242,7 +244,7 @@
 .login-user.active {
   border-color: var(--green);
   background: var(--green-soft);
-  box-shadow: 0 0 0 3px rgba(0, 116, 52, 0.1);
+  box-shadow: 0 0 0 3px rgba(13, 128, 61, 0.1);
 }
 
 .login-user strong,
@@ -547,7 +549,7 @@ input:focus,
 select:focus,
 textarea:focus {
   border-color: var(--orange);
-  box-shadow: 0 0 0 3px rgba(255, 90, 31, 0.14);
+  box-shadow: 0 0 0 3px rgba(255, 94, 18, 0.14);
 }
 
 input[readonly] {
@@ -862,7 +864,7 @@ input[readonly] {
 
 .request-card.active {
   border-color: var(--orange);
-  box-shadow: 0 0 0 3px rgba(255, 90, 31, 0.12);
+  box-shadow: 0 0 0 3px rgba(255, 94, 18, 0.12);
 }
 
 .request-card img {
