@@ -14,10 +14,11 @@ import {
 import { BahandiLogo } from '../components/ui'
 
 const DEMO_ACCOUNTS = [
-  { login: 'manager', pass: 'manager123' },
-  { login: 'aibek', pass: 'demo123' },
-  { login: 'madina', pass: 'demo123' },
-  { login: 'timur', pass: 'demo123' },
+  { login: 'aibek', pass: '1234' },
+  { login: 'aigerim', pass: '9999' },
+  { login: 'manager', pass: '0000' },
+  { login: 'madina', pass: '2222' },
+  { login: 'timur', pass: '3333' },
 ]
 
 export function LoginPage({
@@ -50,7 +51,7 @@ export function LoginPage({
         <h1 className="auth-title">Добро пожаловать!</h1>
         <p className="auth-sub">
           Войдите личным логином
-          <br />и паролем.
+          <br />и пин-кодом.
         </p>
 
         <label className="auth-field">
@@ -78,14 +79,14 @@ export function LoginPage({
         </label>
 
         <label className="auth-field">
-          <span className="auth-label">Пароль</span>
+          <span className="auth-label">Пин-код</span>
           <div className="auth-input">
             <Lock size={19} className="auth-input-icon" />
             <input
               value={password}
               type={showPass ? 'text' : 'password'}
               autoComplete="current-password"
-              placeholder="Введите пароль"
+              placeholder="Введите пин-код"
               onChange={(event) => onPasswordChange(event.target.value)}
             />
             <button
