@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import type { PointerEvent } from 'react'
 import { AlertTriangle, CheckCircle2, Circle, Eye } from 'lucide-react'
 import { dateFormatter } from '../../lib/format'
+import { getRequestPhotoUrls } from '../../lib/media'
 import { getRequestCost } from '../../lib/request'
 import { getScoreTone } from '../../lib/scoring'
 import type { Lookups, WriteOffRequest } from '../../types'
@@ -34,7 +35,7 @@ export function RequestCard({
   const risk = getRequestCost(request, lookups) > 1000 || request.type === 'with_deduction'
   // --- НОВОЕ: AI-скоринг ---
   const tone = getScoreTone(request)
-  const photos = request.photoUrls?.length ? request.photoUrls : [request.photoUrl]
+  const photos = getRequestPhotoUrls(request)
 
   // --- НОВОЕ: long-press логика (без захламления UI чекбоксами) ---
   const timerRef = useRef<number | null>(null)

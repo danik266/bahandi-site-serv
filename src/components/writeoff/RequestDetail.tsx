@@ -12,6 +12,7 @@ import {
 import { Fact, InfoPanel, StatusBadge } from '../ui'
 import { statusIcon } from '../../lib/constants'
 import { dateFormatter, moneyFormatter } from '../../lib/format'
+import { getRequestPhotoUrls } from '../../lib/media'
 import { getRequestCost } from '../../lib/request'
 import type { AuditEvent, Lookups, WriteOffRequest } from '../../types'
 
@@ -29,7 +30,7 @@ export function RequestDetail({
   const author = lookups.employee(request.createdById)
   const reviewer = request.reviewedById ? lookups.employee(request.reviewedById) : undefined
   const StatusIcon = statusIcon[request.status]
-  const photos = request.photoUrls?.length ? request.photoUrls : [request.photoUrl]
+  const photos = getRequestPhotoUrls(request)
 
   return (
     <div className="request-detail">

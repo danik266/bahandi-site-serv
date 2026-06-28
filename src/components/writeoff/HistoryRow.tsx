@@ -1,6 +1,7 @@
 import { Clock3, Database } from 'lucide-react'
 import { StatusBadge } from '../ui'
 import { dateFormatter } from '../../lib/format'
+import { getRequestPhotoUrls } from '../../lib/media'
 import type { Lookups, WriteOffRequest } from '../../types'
 
 export function HistoryRow({
@@ -15,7 +16,7 @@ export function HistoryRow({
 }) {
   const product = lookups.product(request.productId)
   const outlet = lookups.outlet(request.outletId)
-  const photos = request.photoUrls?.length ? request.photoUrls : [request.photoUrl]
+  const photos = getRequestPhotoUrls(request)
 
   const content = (
     <>
