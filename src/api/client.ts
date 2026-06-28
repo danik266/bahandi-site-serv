@@ -1,7 +1,22 @@
-const configuredApiBase =
-  import.meta.env.VITE_API_URL?.trim() || 'http://46.101.134.38:4000/api'
+const configuredApiBase = import.meta.env.VITE_API_URL?.trim()
+const remoteApiBase = 'http://46.101.134.38:4000/api'
 
-export const API_BASE = configuredApiBase.replace(/\/+$/, '')
+function getApiBase() {
+  if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
+    if (!configuredApiBase) return '/api'
+
+    try {
+      const configuredUrl = new URL(configuredApiBase, window.location.origin)
+      if (configuredUrl.protocol === 'http:') return '/api'
+    } catch {
+      return '/api'
+    }
+  }
+
+  return configuredApiBase || remoteApiBase
+}
+
+export const API_BASE = getApiBase().replace(/\/+$/, '')
 
 export async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   const fetchOptions: RequestInit = {
