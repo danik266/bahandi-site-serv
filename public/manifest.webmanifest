@@ -1,6 +1,6 @@
 {
-  "name": "Списание+ Bahandi",
-  "short_name": "Списание+",
+  "name": "Bahandi Spisandi",
+  "short_name": "Bahandi",
   "description": "Мобильное приложение и web-кабинет для контроля списаний Bahandi",
   "start_url": "/",
   "display": "standalone",
